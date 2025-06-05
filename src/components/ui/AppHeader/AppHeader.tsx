@@ -2,7 +2,7 @@ import React from 'react';
 import type { FC } from 'react';
 import type { TAppHeader } from './types';
 import { Button, Image } from "antd";
-import logo from '../../images/logo.png';
+import logo from '../../../images/logo.png';
 export const AppHeader: FC<TAppHeader> = ({ username }) => {
     return (
         <header className='p-3 container'>
@@ -14,7 +14,7 @@ export const AppHeader: FC<TAppHeader> = ({ username }) => {
                 <div className='col-auto'>
                     <Image preview={false} src={logo} alt="logo" style={{ maxWidth: '100px' }} />
                 </div>
-                <div className='gap-4 col d-flex justify-content-end'> 
+                <div className='gap-4 col d-flex justify-content-end align-items-center'> 
                     {username ? (
                         <>
                         <p className="text-center m-0">{username}</p>

@@ -1,0 +1,97 @@
+{
+  "users": [
+    {
+      "id": "1",
+      "email": "user@example.com",
+      "password": "hashed_password", 
+      "name": "Иван Петров",
+      "avatar": "/avatars/user1.jpg",
+      "bio": "Фронтенд-разработчик",
+      "skills": ["JavaScript", "React", "Next.js"],
+      "role": "user", 
+      "status": "online",
+      "lastSeen": "2024-05-28T12:00:00Z"
+    }
+  ],
+  "sessions": [
+    {
+      "id": "101",
+      "userId": "1",
+      "token": "jwt_token_here",
+      "expires": "2024-06-28T12:00:00Z"
+    }
+  ],
+  "chats": [
+    {
+      "id": "201",
+      "type": "dm", 
+      "name": "Личный чат", 
+      "members": ["1", "2"], 
+      "lastMessage": "301",
+      "createdAt": "2024-05-28T10:00:00Z"
+    }
+  ],
+  "messages": [
+    {
+      "id": "301",
+      "chatId": "201",
+      "senderId": "1",
+      "content": "Привет! Как дела?",
+      "attachment": null, 
+      "timestamp": "2024-05-28T10:05:00Z",
+      "readBy": ["2"] 
+    }
+  ],
+  "notifications": [
+    {
+      "id": "401",
+      "userId": "1",
+      "type": "message",
+      "content": "У вас новое сообщение",
+      "isRead": false,
+      "createdAt": "2024-05-28T10:06:00Z"
+    }
+  ],
+  "posts": [
+    {
+      "id": "501",
+      "authorId": "1",
+      "content": "Сегодня отличный день для кодинга!",
+      "image": "/uploads/post1.jpg",
+      "location": { "lat": 55.751244, "lng": 37.618423 },
+      "hashtags": ["#coding", "#javascript"],
+      "likes": ["2", "3"], 
+      "comments": ["601"],
+      "createdAt": "2024-05-28T11:00:00Z"
+    }
+  ],
+  "comments": [
+    {
+      "id": "601",
+      "postId": "501",
+      "authorId": "2",
+      "content": "Согласен!",
+      "createdAt": "2024-05-28T11:05:00Z"
+    }
+  ],
+  "meetups": [
+    {
+      "id": "701",
+      "title": "Встреча фронтендеров",
+      "description": "Обсуждаем React и Next.js",
+      "organizerId": "1",
+      "date": "2024-06-15T18:00:00Z",
+      "location": { "lat": 55.751244, "lng": 37.618423, "address": "Москва, ул. Пушкина, 10" },
+      "participants": ["1", "2", "3"],
+      "maxParticipants": 20,
+      "qrCode": "/qrcodes/meetup701.png"
+    }
+  ],
+  "userMeetups": [
+    {
+      "userId": "1",
+      "meetupId": "701",
+      "status": "registered" 
+    }
+  ]
+}

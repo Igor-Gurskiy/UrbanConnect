@@ -2,9 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AppHeader } from './AppHeader';
 
 const meta: Meta<typeof AppHeader> = {
-  title: 'Components/UI/AppHeader', // Путь в Storybook
+  title: 'Components/UI/AppHeader/AppHeader', // Путь в Storybook
   component: AppHeader, // Компонент
   tags: ['autodocs'], // Доп. опции (опционально)
+  argTypes: {
+    username: {
+      control: 'select',
+      options: ['Alan', ''],
+    },
+  },
 };
 
 export default meta; // Default export (исправляет ошибку)
