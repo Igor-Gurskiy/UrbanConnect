@@ -2,15 +2,15 @@ import { setCookie, getCookie } from "./cookies";
 
 const URL = process.env.API_BASE_URL
 
-const checkResponse = <T>(response: Response): Promise<T> => {
+export const checkResponse = <T>(response: Response): Promise<T> => {
     return response.ok ? response.json() : Promise.reject(response);
 };
 
-type TServerResponse<T> = {
+export type TServerResponse<T> = {
     success: boolean;
 } & T;
 
-type TRefreshResponse = TServerResponse<{
+export type TRefreshResponse = TServerResponse<{
     refreshToken: string;
     accessToken: string;
 }>
@@ -65,18 +65,18 @@ export const fetchWithRefresh = async <T>(
     }
 }
 
-type TUser = {
+export type TUser = {
     email: string,
     name: string
 }
 
-type TRegisterData = {
+export type TRegisterData = {
   email: string;
   name: string;
   password: string;
 };
 
-type TUserResponse = TServerResponse<{user: TUser}>
+export type TUserResponse = TServerResponse<{user: TUser}>
 
 export const updateUserApi = (user: Partial<TRegisterData>) =>
     fetchWithRefresh<TUserResponse>(`${URL}/auth/user`, {
@@ -88,10 +88,64 @@ export const updateUserApi = (user: Partial<TRegisterData>) =>
         body: JSON.stringify(user),
     });
 
-export const getUser = () =>
+export const getUserApi = () =>
     fetchWithRefresh<TUserResponse>(`${URL}/auth/user`, {
         method: "GET",
         headers: {
             authorization: getCookie("accessToken"),
         } as HeadersInit,
     });
+
+export type TLogoutResponse = {
+  success: boolean;
+  message?: string;
+};
+export const logoutUserApi = () => 
+    fetch(`${URL}/auth/logout`, {
+        method: "POST",
+        headers: {
+            'Content-Type': 'application/json;charset=utf-8'
+        },
+        body: JSON.stringify({
+            token: localStorage.getItem('refreshToken')
+        })
+    }).then((res) => checkResponse<TServerResponse<TLogoutResponse>>(res));
+
+export type TLoginData = {
+  email: string;
+  password: string;
+};
+
+export type TAuthResponse = TServerResponse<{
+  refreshToken: string;
+  accessToken: string;
+  user: TUser;
+}>;
+
+export const loginUserApi = (user: TLoginData) =>
+    fetch(`${URL}/auth/login`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8",
+        },
+        body: JSON.stringify(user),
+    })
+    .then((res) => checkResponse<TAuthResponse>(res))
+    .then((data) => {
+        if (data?.success) return data;
+        return Promise.reject(data);
+    })
+
+export const registerUserApi = (data: TRegisterData) =>
+    fetch(`${URL}/auth/register`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json;charset=utf-8",
+        },
+        body: JSON.stringify(data),
+    })
+    .then((res) => checkResponse<TAuthResponse>(res))
+    .then((data) => {
+        if (data?.success) return data;
+        return Promise.reject(data);
+    })
