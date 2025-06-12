@@ -2,7 +2,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { setCookie, deleteCookie } from "../../../utils/cookies";
 import {
   getUserApi,
-  updateUserApi,
+  // updateUserApi,
   logoutUserApi,
   loginUserApi,
   registerUserApi,
@@ -25,21 +25,21 @@ export const initialState: TProfileState = {
   error: null,
 };
 
+
 export const registerUser = createAsyncThunk(
   "profile/registerUser",
   async (data: TRegisterData) =>
     await registerUserApi(data).then((data) => {
-      setCookie("accessToken", data.accessToken);
+      setCookie("accessToken", data.accessToken, {expires: 3600});
       localStorage.setItem("refreshToken", data.refreshToken);
       return data.user;
     })
-);
-
+)
 export const loginUser = createAsyncThunk(
   "profile/loginUser",
   async (data: TLoginData) =>
     await loginUserApi(data).then((data) => {
-      setCookie("accessToken", data.accessToken);
+      setCookie("accessToken", data.accessToken, {expires: 3600});
       localStorage.setItem("refreshToken", data.refreshToken);
       return data.user;
     })
@@ -56,12 +56,16 @@ export const logoutUser = createAsyncThunk(
 
 export const getUser = createAsyncThunk("profile/getUser", getUserApi);
 
-export const updateUser = createAsyncThunk("profile/updateUser", updateUserApi);
+// export const updateUser = createAsyncThunk("profile/updateUser", updateUserApi);
 
 export const ProfileSlice = createSlice({
   name: "profile",
   initialState,
-  reducers: {},
+  reducers: {
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
   selectors: {
     selectUser: (state) => state.user,
     selectIsAuthChecked: (state) => state.isAuthChecked,
@@ -72,10 +76,12 @@ export const ProfileSlice = createSlice({
     builder
       .addCase(registerUser.pending, (state) => {
         state.isLoadingRegistration = true;
+        state.error = null;
       })
       .addCase(registerUser.fulfilled, (state, action) => {
         state.isLoadingRegistration = false;
         state.user = action.payload;
+        state.error = null;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.isLoadingRegistration = false;
@@ -110,17 +116,17 @@ export const ProfileSlice = createSlice({
         state.error = action.error.message || null;
         state.isAuthChecked = true;
       })
-      .addCase(updateUser.pending, (state) => {
-        state.isLoadingRegistration = true;
-      })
-      .addCase(updateUser.fulfilled, (state, action) => {
-        state.user = action.payload.user;
-      })
-      .addCase(updateUser.rejected, (state, action) => {
-        state.isLoadingRegistration = false;
-        state.error = action.error.message || null;
-        state.user = null;
-      });
+      // .addCase(updateUser.pending, (state) => {
+      //   state.isLoadingRegistration = true;
+      // })
+      // .addCase(updateUser.fulfilled, (state, action) => {
+      //   state.user = action.payload.user;
+      // })
+      // .addCase(updateUser.rejected, (state, action) => {
+      //   state.isLoadingRegistration = false;
+      //   state.error = action.error.message || null;
+      //   state.user = null;
+      // });
   },
 });
 
@@ -130,5 +136,7 @@ export const {
   selectError,
   selectIsLoadingRegistration,
 } = ProfileSlice.selectors;
+
+export const { clearError } = ProfileSlice.actions;
 
 export default ProfileSlice.reducer;

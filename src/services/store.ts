@@ -4,8 +4,11 @@ import {
   useDispatch as dispatchHook,
   useSelector as selectorHook
 } from 'react-redux';
+import { ProfileSlice } from "./slices/Profile/Profile";
 
-export const rootReducer = combineSlices();
+export const rootReducer = combineSlices(
+  ProfileSlice
+);
 
 const store = configureStore({
     reducer: rootReducer

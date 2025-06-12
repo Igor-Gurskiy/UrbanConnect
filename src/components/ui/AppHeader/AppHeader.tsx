@@ -3,7 +3,8 @@ import type { FC } from 'react';
 import type { TAppHeader } from './types';
 import { Button, Image } from "antd";
 import logo from '../../../images/logo.png';
-export const AppHeader: FC<TAppHeader> = ({ username }) => {
+export const AppHeader: FC<TAppHeader> = ({ username, handleLogin, handleSignup, handleLogout }) => {
+
     return (
         <header className='p-3 container'>
             <nav className='row border-bottom px-2 align-items-center'>
@@ -18,12 +19,12 @@ export const AppHeader: FC<TAppHeader> = ({ username }) => {
                     {username ? (
                         <>
                         <p className="text-center m-0">{username}</p>
-                        <Button type="default" >Log out</Button>
+                        <Button type="default" onClick={handleLogout}>Log out</Button>
                         </>
                     ) : (
                         <>
-                        <Button type="default" >Log in</Button>
-                        <Button type="default" >Sign up</Button>
+                        <Button type="default" onClick={handleLogin}>Log in</Button>
+                        <Button type="default" onClick={handleSignup}>Sign up</Button>
                         </>
                     )}
                 </div>
