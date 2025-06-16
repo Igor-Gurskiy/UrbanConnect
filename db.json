@@ -6,6 +6,43 @@
       "name": "Igor-Gurskiy",
       "password": "1",
       "createdAt": "2025-06-12T07:08:01.643Z"
+    },
+    {
+      "id": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1",
+      "email": "tuttam2013@yandex.ru",
+      "name": "9778249831",
+      "password": "1",
+      "createdAt": "2025-06-15T11:22:33.555Z"
+    }
+  ],
+  "chats": [
+    {
+      "id": 1,
+      "type": "private",
+      "users": [
+        "2c9be4ad-1326-4e00-92db-9ddd850969e8",
+        "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+      ],
+      "lastMessage": {},
+      "messages": [{
+        "id": 1,
+        "text": "Hello!",
+        "createdAt": "2025-06-12T07:08:01.643Z",
+        "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        },
+        {
+        "id": 2,
+        "text": "Hi!",
+        "createdAt": "2025-06-12T07:08:01.643Z",
+        "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+        },
+        {
+          "id": 3,
+          "text": "How are you?",
+          "createdAt": "2025-06-12T07:08:01.643Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        }
+      ]
     }
   ]
 }

@@ -10,6 +10,7 @@ import { useNavigate } from 'react-router-dom';
 export const Login: FC = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
+    const [remember, setRemember] = useState(false);
     const navigate = useNavigate();
     const dispatch = useDispatch();
     const error = useSelector(selectError);
@@ -19,9 +20,9 @@ export const Login: FC = () => {
     }, [dispatch]);
     const handleSubmit = async () => {
         dispatch(clearError());
-        await dispatch(loginUser({ email, password })).unwrap();
+        await dispatch(loginUser({ email, password, remember })).unwrap();
         navigate(-1);
     };
 
-    return <LoginUI email={email} password={password} setEmail={setEmail} setPassword={setPassword} handleSubmit={handleSubmit} error={error}/>;
+    return <LoginUI email={email} password={password} remember={remember} setRemember={setRemember} setEmail={setEmail} setPassword={setPassword}handleSubmit={handleSubmit} error={error}/>;
 };

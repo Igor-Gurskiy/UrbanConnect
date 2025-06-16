@@ -1,26 +1,38 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { AppHeader } from './AppHeader';
+import { MemoryRouter } from 'react-router-dom';
 
 const meta: Meta<typeof AppHeader> = {
-  title: 'Components/UI/AppHeader/AppHeader', // Путь в Storybook
-  component: AppHeader, // Компонент
-  tags: ['autodocs'], // Доп. опции (опционально)
-  argTypes: {
-    username: {
-      control: 'select',
-      options: ['Alan', ''],
-    },
-  },
+  title: 'Components/UI/AppHeader',
+  component: AppHeader,
+  tags: ['autodocs'],
+  decorators: [
+    (Story) => (
+      <MemoryRouter>
+        <Story />
+      </MemoryRouter>
+    )
+  ],
 };
 
-export default meta; // Default export (исправляет ошибку)
+export default meta;
 
-// Примеры стори (обычные named exports)
 type Story = StoryObj<typeof AppHeader>;
 
-export const Default: Story = {
+export const LoggedOut: Story = {
   args: {
-    // Пропсы компонента
-    // username: 'Alan'
-  },
+    username: undefined,
+    handleLogin: () => console.log('Login clicked'),
+    handleSignup: () => console.log('Signup clicked'),
+    handleLogout: () => console.log('Logout clicked')
+  }
+};
+
+export const LoggedIn: Story = {
+  args: {
+    username: 'Alan Turing',
+    handleLogin: () => console.log('Login clicked'),
+    handleSignup: () => console.log('Signup clicked'),
+    handleLogout: () => console.log('Logout clicked')
+  }
 };

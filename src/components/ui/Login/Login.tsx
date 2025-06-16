@@ -2,7 +2,7 @@ import { Button, Form, Input, Checkbox } from "antd";
 import type { FC } from 'react';
 import type { TLogin } from './types';
 
-export const Login: FC<TLogin> = ({email, password, setEmail, setPassword, handleSubmit, error}) => {
+export const Login: FC<TLogin> = ({email, password, remember, setEmail, setPassword, setRemember, handleSubmit, error}) => {
 
     const layout = {
   labelCol: { span: 8 },
@@ -22,7 +22,7 @@ export const Login: FC<TLogin> = ({email, password, setEmail, setPassword, handl
               <Input.Password onChange={(e) => setPassword(e.target.value)} value={password}/>
             </Form.Item>
             <Form.Item name="remember" valuePropName="checked" label={null}>
-              <Checkbox>Remember me</Checkbox>
+              <Checkbox checked={remember} onChange={(e) => setRemember(e.target.checked)}>Remember me</Checkbox>
             </Form.Item>
             <Button htmlType='submit' type="default">
               Submit

@@ -39,8 +39,16 @@ export const loginUser = createAsyncThunk(
   "profile/loginUser",
   async (data: TLoginData) =>
     await loginUserApi(data).then((data) => {
-      setCookie("accessToken", data.accessToken, {expires: 3600});
+      const tokenOptions = data.remember ? {expires: 60 * 60 * 24 * 30} : {expires: 60 * 15};
+      console.log(data.remember)
+      setCookie("accessToken", data.accessToken, tokenOptions);
       localStorage.setItem("refreshToken", data.refreshToken);
+      // Сохраняем выбор "Remember me"
+    if (data.remember) {
+      localStorage.setItem("rememberMe", "true");
+    } else {
+      localStorage.removeItem("rememberMe");
+    }
       return data.user;
     })
 );

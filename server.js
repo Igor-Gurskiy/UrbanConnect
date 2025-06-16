@@ -6,6 +6,10 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 import { generateTokens } from './token.service.js';
 import jwt from 'jsonwebtoken';
+import dotenv from 'dotenv';
+dotenv.config();
+const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
+const REFRESH_TOKEN_SECRET = process.env.REFRESH_TOKEN_SECRET;
 
 // Получаем __dirname в ES Modules
 const __filename = fileURLToPath(import.meta.url);
@@ -86,7 +90,7 @@ app.post('/api/register', async (req, res) => {
 // Вход
 app.post('/api/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, remember = false } = req.body;
     
 
     const db = await readDB();
@@ -106,7 +110,9 @@ app.post('/api/login', async (req, res) => {
       });
     }
 
-    const { accessToken, refreshToken } = generateTokens(existingUser.id);
+    const expiresIn = remember ? '30d' : '15m'; 
+    const refreshExpiresIn = remember ? '60d' : '1d';
+    const { accessToken, refreshToken } = generateTokens(existingUser.id, expiresIn, refreshExpiresIn);
 
      return res.status(200).json({
         success: true,
@@ -116,7 +122,8 @@ app.post('/api/login', async (req, res) => {
         name: existingUser.name
       },
       accessToken,
-    refreshToken
+    refreshToken,
+    remember
     });
   } catch (error) {
      return res.status(500).json({ success: false, message: 'Ошибка сервера' });
@@ -135,7 +142,6 @@ app.get('/api/user', async (req, res) => {
       });
     }
 
-    const ACCESS_TOKEN_SECRET = 'your-access-token-secret-key';
     const token = authHeader.split(' ')[1]; // Получаем токен из "Bearer <token>"
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
@@ -175,7 +181,6 @@ app.get('/api/user', async (req, res) => {
 app.post('/api/token', async (req, res) => {
   try {
     const { refreshToken } = req.body;
-    const REFRESH_TOKEN_SECRET = 'your-refresh-token-secret-key';
 
     if (!refreshToken) {
       return res.status(401).json({ success: false, message: 'Refresh token is required' });
