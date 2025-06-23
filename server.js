@@ -209,7 +209,6 @@ app.post('/api/token', async (req, res) => {
 // выход
 app.post('/api/logout', (req, res) => {
   try {
-    // Здесь можно добавить логику инвалидации refreshToken, если нужно
     return res.status(200).json({ 
       success: true,
       message: 'Logged out successfully'

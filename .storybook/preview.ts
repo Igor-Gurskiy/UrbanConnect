@@ -10,8 +10,12 @@ const preview: Preview = {
        date: /Date$/i,
       },
     },
+    layout: 'fullscreen', // Убирает padding у контейнера
+  // или явно переопределяем стили:
+  backgrounds: {
+    // default: 'transparent',
   },
-  
+  }, 
 };
 
 export default preview;

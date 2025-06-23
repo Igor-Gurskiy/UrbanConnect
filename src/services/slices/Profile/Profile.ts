@@ -43,7 +43,6 @@ export const loginUser = createAsyncThunk(
       console.log(data.remember)
       setCookie("accessToken", data.accessToken, tokenOptions);
       localStorage.setItem("refreshToken", data.refreshToken);
-      // Сохраняем выбор "Remember me"
     if (data.remember) {
       localStorage.setItem("rememberMe", "true");
     } else {
@@ -63,8 +62,6 @@ export const logoutUser = createAsyncThunk(
 );
 
 export const getUser = createAsyncThunk("profile/getUser", getUserApi);
-
-// export const updateUser = createAsyncThunk("profile/updateUser", updateUserApi);
 
 export const ProfileSlice = createSlice({
   name: "profile",

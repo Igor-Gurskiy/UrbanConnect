@@ -23,7 +23,12 @@
         "2c9be4ad-1326-4e00-92db-9ddd850969e8",
         "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
       ],
-      "lastMessage": {},
+      "lastMessage": {
+          "id": 3,
+          "text": "How are you?",
+          "createdAt": "2025-06-12T07:08:01.643Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        },
       "messages": [{
         "id": 1,
         "text": "Hello!",
