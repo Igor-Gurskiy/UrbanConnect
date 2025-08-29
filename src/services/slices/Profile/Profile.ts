@@ -2,7 +2,8 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { setCookie, deleteCookie } from "../../../utils/cookies";
 import {
   getUserApi,
-  // updateUserApi,
+  getUserByIdApi,
+  getUsersApi,
   logoutUserApi,
   loginUserApi,
   registerUserApi,
@@ -13,6 +14,7 @@ import {
 
 type TProfileState = {
   user: TUser | null;
+  users: TUser[];
   isLoadingRegistration: boolean;
   isAuthChecked: boolean;
   error: string | null;
@@ -23,31 +25,32 @@ export const initialState: TProfileState = {
   isLoadingRegistration: false,
   isAuthChecked: false,
   error: null,
+  users: [],
 };
-
 
 export const registerUser = createAsyncThunk(
   "profile/registerUser",
   async (data: TRegisterData) =>
     await registerUserApi(data).then((data) => {
-      setCookie("accessToken", data.accessToken, {expires: 3600});
+      setCookie("accessToken", data.accessToken, { expires: 3600 });
       localStorage.setItem("refreshToken", data.refreshToken);
       return data.user;
     })
-)
+);
 export const loginUser = createAsyncThunk(
   "profile/loginUser",
   async (data: TLoginData) =>
     await loginUserApi(data).then((data) => {
-      const tokenOptions = data.remember ? {expires: 60 * 60 * 24 * 30} : {expires: 60 * 15};
-      console.log(data.remember)
+      const tokenOptions = data.remember
+        ? { expires: 60 * 60 * 24 * 30 }
+        : { expires: 60 * 15 };
       setCookie("accessToken", data.accessToken, tokenOptions);
       localStorage.setItem("refreshToken", data.refreshToken);
-    if (data.remember) {
-      localStorage.setItem("rememberMe", "true");
-    } else {
-      localStorage.removeItem("rememberMe");
-    }
+      if (data.remember) {
+        localStorage.setItem("rememberMe", "true");
+      } else {
+        localStorage.removeItem("rememberMe");
+      }
       return data.user;
     })
 );
@@ -63,6 +66,13 @@ export const logoutUser = createAsyncThunk(
 
 export const getUser = createAsyncThunk("profile/getUser", getUserApi);
 
+export const getUserById = createAsyncThunk(
+  "profile/getUserById",
+  async (id: string) => await getUserByIdApi(id)
+);
+
+export const getUsers = createAsyncThunk("profile/getUsers", getUsersApi);
+
 export const ProfileSlice = createSlice({
   name: "profile",
   initialState,
@@ -70,9 +80,14 @@ export const ProfileSlice = createSlice({
     clearError: (state) => {
       state.error = null;
     },
+    setAuthChecked: (state, action: { payload: boolean }) => {
+      state.isAuthChecked = action.payload;
+    },
   },
   selectors: {
     selectUser: (state) => state.user,
+    selectUsers: (state) => state.users,
+    selectUserId: (state) => state.user?.id,
     selectIsAuthChecked: (state) => state.isAuthChecked,
     selectError: (state) => state.error,
     selectIsLoadingRegistration: (state) => state.isLoadingRegistration,
@@ -120,18 +135,17 @@ export const ProfileSlice = createSlice({
       .addCase(getUser.rejected, (state, action) => {
         state.error = action.error.message || null;
         state.isAuthChecked = true;
+        state.user = null;
       })
-      // .addCase(updateUser.pending, (state) => {
-      //   state.isLoadingRegistration = true;
-      // })
-      // .addCase(updateUser.fulfilled, (state, action) => {
-      //   state.user = action.payload.user;
-      // })
-      // .addCase(updateUser.rejected, (state, action) => {
-      //   state.isLoadingRegistration = false;
-      //   state.error = action.error.message || null;
-      //   state.user = null;
-      // });
+      .addCase(getUsers.fulfilled, (state, action) => {
+        state.users = action.payload.users;
+      })
+      .addCase(getUsers.rejected, (state, action) => {
+        state.error = action.error.message || null;
+      })
+      .addCase(getUsers.pending, (state) => {
+        state.error = null;
+      });
   },
 });
 
@@ -140,8 +154,10 @@ export const {
   selectIsAuthChecked,
   selectError,
   selectIsLoadingRegistration,
+  selectUserId,
+  selectUsers,
 } = ProfileSlice.selectors;
 
-export const { clearError } = ProfileSlice.actions;
+export const { clearError, setAuthChecked } = ProfileSlice.actions;
 
 export default ProfileSlice.reducer;

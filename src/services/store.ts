@@ -5,9 +5,11 @@ import {
   useSelector as selectorHook
 } from 'react-redux';
 import { ProfileSlice } from "./slices/Profile/Profile";
+import { ChatSlice } from "./slices/Chat/Chat";
 
 export const rootReducer = combineSlices(
-  ProfileSlice
+  ProfileSlice,
+  ChatSlice
 );
 
 const store = configureStore({

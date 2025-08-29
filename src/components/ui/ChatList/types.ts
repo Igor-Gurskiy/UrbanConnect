@@ -1,16 +1,25 @@
+import { type TUser } from "../../../utils/urbanConnect-api";
+
 export type TChat = {
-    name: string
-    avatar?: string,
-    lastMessage: TMessage
-}
+  id: string;
+  avatar?: string;
+  type: string;
+  users: string[];
+  lastMessage: TMessage;
+  messages?: TMessage[];
+  name: string;
+};
 
 export type TMessage = {
-    id: number,
-    text: string,
-    createdAt: string,
-    user: string
-}
+  id: string;
+  text: string;
+  createdAt: string;
+  user: string;
+};
 
 export type TChatList = {
-    chats: TChat[]
-}
+  chats: TChat[];
+  onChatSelect: (chatId: string) => void;
+  user: TUser;
+  users: TUser[];
+};
