@@ -1,12 +1,16 @@
-import { type FC, useState, useEffect, useRef } from "react";
+import { type FC, useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Avatar, Typography, List, Button, Input } from "antd";
 import {
   SmileOutlined,
   PaperClipOutlined,
   SendOutlined,
 } from "@ant-design/icons";
-import type { TChatDialog, TMessage } from "./types";
-export const ChatDialogUI: FC<TChatDialog> = ({
+import type { TChatDialog } from "./types";
+import type { TMessage } from "../../../utils/types";
+import { MessageItemUI } from '../MessageItem/MessageItem';
+import React from "react";
+
+export const ChatDialogUI: FC<TChatDialog> = React.memo(({
   name,
   avatar,
   isOnline,
@@ -18,42 +22,84 @@ export const ChatDialogUI: FC<TChatDialog> = ({
   type,
 }) => {
   const [messageText, setMessageText] = useState("");
-  const isCurrentUserMessage = (message: TMessage): boolean => {
+
+  const isCurrentUserMessage = useCallback((message: TMessage): boolean => {
     return !!user?.id && message.user === user.id;
-  };
+  }, [user?.id]);
 
-  const avatarContent = avatar ? null : name.slice(0, 1).toUpperCase();
-
-  const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
-    }
-  };
-
-    const messagesEndRef = useRef<HTMLDivElement>(null);
-    const listRef = useRef<HTMLDivElement>(null);
-  
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
-
-  const handleSendMessage = () => {
+  const handleSendMessage = useCallback(() => {
     if (messageText.trim() && user) {
       onSend(messageText);
       setMessageText("");
     }
-  };
+  }, [messageText, onSend, user]);
+
+  const avatarContent = useMemo(() => avatar ? null : name.slice(0, 1).toUpperCase(), [avatar, name]);
+  const chatName = useMemo(() => type === 'private' ? name.replace('-', ' ') : name, [type, name]);
+  
+  const handleKeyPress = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSendMessage();
+    }
+  }, [handleSendMessage]);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const listRef = useRef<HTMLDivElement>(null);
+  
+  const scrollToBottom = useCallback(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, []);
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]);
+
+  const formatMessageDate = useCallback((dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}, []);
+
+const isSameDay = useCallback((date1: string, date2: string): boolean => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  return d1.toDateString() === d2.toDateString();
+}, []);
+
+  const MessageItem = useCallback((item: TMessage, index: number) => {
+    const isCurrentUser = isCurrentUserMessage(item);
+    const showDate = index === 0 || !isSameDay(item.createdAt, messages[index - 1].createdAt);
+    
+    return (
+      <>
+        {showDate && (
+          <div style={{
+            textAlign: 'center',
+            padding: '8px',
+            margin: '10px 0',
+            color: '#666',
+            fontSize: '12px',
+            fontWeight: 'bold'
+          }}>
+            {formatMessageDate(item.createdAt)}
+          </div>
+        )}
+        <MessageItemUI item={item} isCurrentUser={isCurrentUser} />
+      </>
+    );
+  }, [isCurrentUserMessage, messages]);
 
   return (
     <>
       <div
         style={{ display: "flex", flexDirection: "column", padding: "16px", height: "80vh" }}
       >
+        {/* Заголовок чата */}
         <div
           style={{
             display: "flex",
@@ -61,8 +107,7 @@ export const ChatDialogUI: FC<TChatDialog> = ({
             gap: "20px",
             backgroundColor: "#f0f0f0",
             padding: "10px",
-            maxHeight: "10vh",
-            // flexShrink: 0,
+            maxHeight: "10vh"
           }}
         >
           <Avatar src={avatar} size="large" style={{ fontSize: "1.5rem" }}>
@@ -72,12 +117,12 @@ export const ChatDialogUI: FC<TChatDialog> = ({
             style={{
               display: "flex",
               flexDirection: "column",
-              alignItems: "center",
+              alignItems: "start",
               justifyContent: "center",
             }}
           >
             <Typography.Paragraph style={{ margin: 0, fontSize: "1.2rem" }}>
-              {name}
+              {chatName}
             </Typography.Paragraph>
             <Typography.Paragraph
               style={{
@@ -90,64 +135,17 @@ export const ChatDialogUI: FC<TChatDialog> = ({
             </Typography.Paragraph>
           </div>
         </div>
+        {/* Область сообщений с виртуализацией */}
         <div style={{  overflowY: "auto", flex: 1, minHeight: 0, }}>
           <List
             ref={listRef}
             style={{ width: "100%" }}
             dataSource={messages}
-            renderItem={(item: TMessage) => {
-              const isCurrentUser = isCurrentUserMessage(item);
-              return (
-                <List.Item
-                  style={{
-                    display: "flex",
-                    justifyContent: isCurrentUser ? "flex-end" : "flex-start",
-                    padding: "10px",
-                  }}
-                >
-                  <div
-                    style={{
-                      display: "flex",
-                      gap: "10px",
-                      width: "60%",
-                      padding: "8px 12px",
-                      borderRadius: isCurrentUser
-                        ? "18px 18px 0 18px"
-                        : "18px 18px 18px 0",
-                      backgroundColor: isCurrentUser ? "#1890ff" : "#e6e6e6",
-                      alignItems: "center",
-                      justifyContent: "space-between",
-                    }}
-                  >
-                    <Typography.Paragraph
-                      style={{
-                        margin: 0,
-                        fontSize: "1rem",
-                        color: isCurrentUser ? "#fff" : "#000",
-                      }}
-                    >
-                      {item.text}
-                    </Typography.Paragraph>
-                    <div
-                      style={{
-                        fontSize: "10px",
-                        textAlign: "right",
-                        color: isCurrentUser ? "#fff" : "#000",
-                        alignContent: "flex-end",
-                      }}
-                    >
-                      {new Date(item.createdAt).toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                      })}
-                    </div>
-                  </div>
-                </List.Item>
-              );
-            }}
-          ></List>
+            renderItem={MessageItem}
+          />
           <div ref={messagesEndRef} />
         </div>
+        {/* Форма ввода сообщения */}
         <div
           style={{
             backgroundColor: "#f0f0f0",
@@ -172,7 +170,7 @@ export const ChatDialogUI: FC<TChatDialog> = ({
             <Input.TextArea
               value={messageText}
               onChange={(e) => setMessageText(e.target.value)}
-              onKeyPress={handleKeyPress}
+              onKeyDown={handleKeyPress}
               autoSize={{ minRows: 1, maxRows: 3 }}
               placeholder="Message"
               style={{
@@ -187,11 +185,11 @@ export const ChatDialogUI: FC<TChatDialog> = ({
               type="primary"
               icon={<SendOutlined />}
               onClick={handleSendMessage}
-              disabled={!messageText.trim}
+              disabled={!messageText.trim()}
             ></Button>
           </div>
         </div>
       </div>
     </>
   );
-};
+});

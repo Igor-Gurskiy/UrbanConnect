@@ -1,4 +1,5 @@
-import { type TUser } from '../../../utils/urbanConnect-api';
+import type { TMessage, TUser } from "../../../utils/types"
+
 export type TChatDialog = {
     name: string,
     isOnline: boolean
@@ -10,10 +11,5 @@ export type TChatDialog = {
     handleSmileClick: () => void,
     handleFileAttach: () => void
 }
-export type TMessage = {
-    id: string,
-    text: string,
-    createdAt: string,
-    user: string
-}
+
 

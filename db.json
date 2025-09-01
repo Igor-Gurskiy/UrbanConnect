@@ -25,17 +25,16 @@
   "chats": [
     {
       "id": "1",
-      "avatar": "https://example.com/avatars/chat1.jpg",
-      "name": "John & Alex",
+      "name": "Alex-Petrov",
       "type": "private",
       "users": [
         "2c9be4ad-1326-4e00-92db-9ddd850969e8",
         "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
       ],
       "lastMessage": {
-        "id": "75c927b0-b687-49f2-8faf-b40790b256ac",
-        "text": "qwe",
-        "createdAt": "2025-08-28T09:05:26.495Z",
+        "id": "21e875d0-1d56-4ebe-9fce-6a9247427add",
+        "text": "hj",
+        "createdAt": "2025-09-01T13:44:12.536Z",
         "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
       },
       "messages": [
@@ -46,214 +45,21 @@
           "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         },
         {
-          "id": "2",
-          "text": "I'm good, thanks! And you?",
-          "createdAt": "2025-07-20T10:20:33.000Z",
+          "id": "aecb5451-72ba-490d-88b4-986a4f08a086",
+          "text": "jh",
+          "createdAt": "2025-08-29T19:49:59.817Z",
           "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
         },
         {
-          "id": "3",
-          "text": "Let's meet tomorrow at 3 PM",
-          "createdAt": "2025-07-20T14:30:45.000Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "441fe4af-aaa4-4039-9997-6538c7252c38",
-          "text": "rty",
-          "createdAt": "2025-08-20T10:00:49.145Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "a509e8a9-ba47-4d95-b659-d6f5a56a3d6d",
-          "text": "qwe",
-          "createdAt": "2025-08-20T17:29:26.651Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "ff2fde80-8864-410e-9b9d-81d940222b34",
-          "text": "qwrgrtg",
-          "createdAt": "2025-08-21T08:57:25.224Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "d72aa6a2-96be-4eb1-897b-0543874289ea",
-          "text": "hjkhk;",
-          "createdAt": "2025-08-21T08:57:28.510Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "3e96aa1b-a250-4dc3-bac3-e5765376e3a2",
-          "text": "qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
-          "createdAt": "2025-08-21T09:19:20.698Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "a88e633c-9d8b-4a74-ad90-20f1315530e9",
-          "text": "апоапо",
-          "createdAt": "2025-08-21T10:21:51.715Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "c3b85d67-ee1f-4728-a5e8-c1d994a66757",
-          "text": "qw",
-          "createdAt": "2025-08-25T08:35:58.315Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "e6e98a20-0bee-46b5-afac-737b1fec4132",
-          "text": "qwe",
-          "createdAt": "2025-08-25T08:42:18.350Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "4c2f59b9-1c3c-4d70-90b6-dbfdd5f1fe35",
-          "text": "qw",
-          "createdAt": "2025-08-25T08:45:53.575Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "dec200f7-7271-405f-8186-6c9a8e9affa2",
-          "text": "qw",
-          "createdAt": "2025-08-25T08:46:59.446Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "d0546eb7-cf88-4643-9efe-95ccae7a31e3",
-          "text": "qer",
-          "createdAt": "2025-08-25T08:47:37.816Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "de5f6419-ffd3-4b22-a754-60d1b9db4257",
-          "text": "qwe",
-          "createdAt": "2025-08-25T08:49:03.679Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "cd4c33b4-037b-4d8d-b728-bf9cf1629212",
-          "text": "йцу",
-          "createdAt": "2025-08-25T08:53:46.692Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "f70230b1-b8dd-4bad-89c0-a26bcd1ecc8b",
-          "text": "qw",
-          "createdAt": "2025-08-25T09:05:04.918Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "6c828d90-a15c-4b4b-a2b3-ac3c0aa08e9b",
-          "text": "ftj",
-          "createdAt": "2025-08-25T09:05:36.208Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "d9929bfa-b383-48a5-9394-a844f6dbbd74",
-          "text": "ап",
-          "createdAt": "2025-08-25T09:14:55.452Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "31678c3f-7c5e-4432-b3f7-53911c1bc743",
-          "text": "hjk",
-          "createdAt": "2025-08-28T07:43:36.182Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "8d0362aa-45c1-45e5-959e-0b3738b671b0",
-          "text": "fgh",
-          "createdAt": "2025-08-28T07:44:07.414Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "e52ca73f-514d-47d2-9e9a-6805ab4330a4",
-          "text": "hjk",
-          "createdAt": "2025-08-28T07:44:31.946Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "3aa1487e-aa20-4871-b8d5-5ba1333a0fc8",
-          "text": "рол",
-          "createdAt": "2025-08-28T08:03:10.378Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "d8d7f744-051f-4263-abf1-f8a62ae140b5",
-          "text": "рол",
-          "createdAt": "2025-08-28T08:09:33.733Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "6fa77052-9c5d-4fb8-bc3a-f24353652601",
-          "text": "гшщ",
-          "createdAt": "2025-08-28T08:09:55.156Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "5a15651f-4523-4654-bed3-b93b6e9b6409",
-          "text": "пр",
-          "createdAt": "2025-08-28T08:14:09.696Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "f799e5b8-e6aa-4e53-9dca-60b8d8a687c0",
-          "text": "апр",
-          "createdAt": "2025-08-28T08:14:16.849Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "7e5fdc22-4ad2-4e68-8798-33f3d5c0d2c2",
-          "text": "йцу",
-          "createdAt": "2025-08-28T08:17:39.597Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "d995eeff-620c-43c3-bf83-084ed99fe2c0",
-          "text": "ароджэ",
-          "createdAt": "2025-08-28T08:17:56.094Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "be0b3a9c-a464-4ca8-b2c4-56fa9a3a6b8e",
-          "text": "рол",
-          "createdAt": "2025-08-28T08:35:56.693Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "24b09761-3af6-4ad6-927c-4f4b247afd97",
-          "text": "про",
-          "createdAt": "2025-08-28T08:44:49.514Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "f190f232-412b-45ac-9ffd-38e814152345",
-          "text": "про",
-          "createdAt": "2025-08-28T08:48:44.339Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "d5b27a24-50db-4f35-ac80-c02c4d209ddf",
-          "text": "йц",
-          "createdAt": "2025-08-28T08:48:47.795Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "ccba33b2-4896-413a-8cf5-d07be9869df7",
-          "text": "йцу",
-          "createdAt": "2025-08-28T08:55:30.671Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "75c927b0-b687-49f2-8faf-b40790b256ac",
-          "text": "qwe",
-          "createdAt": "2025-08-28T09:05:26.495Z",
+          "id": "21e875d0-1d56-4ebe-9fce-6a9247427add",
+          "text": "hj",
+          "createdAt": "2025-09-01T13:44:12.536Z",
           "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         }
       ]
     },
     {
       "id": "2",
-      "avatar": "https://example.com/avatars/team.jpg",
       "name": "Work Team",
       "type": "group",
       "users": [
@@ -262,9 +68,9 @@
         "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
       ],
       "lastMessage": {
-        "id": "d72e6ada-97e5-4294-91e6-94ed6ba4890f",
-        "text": "ghj",
-        "createdAt": "2025-08-28T09:05:37.629Z",
+        "id": "e299fcde-7f63-4eba-a956-c26102b2a72b",
+        "text": "qwe",
+        "createdAt": "2025-09-01T13:44:00.328Z",
         "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
       },
       "messages": [
@@ -275,94 +81,21 @@
           "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         },
         {
-          "id": "5",
-          "text": "Don't forget about today's meeting",
-          "createdAt": "2025-07-21T08:15:33.000Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "6",
-          "text": "What time is the meeting?",
-          "createdAt": "2025-07-21T09:30:45.000Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "7",
-          "text": "The meeting is postponed to Friday",
-          "createdAt": "2025-07-21T09:45:12.000Z",
-          "user": "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
-        },
-        {
-          "id": "6af0292c-fbc7-42ee-b665-8743744940f7",
-          "text": "апр",
-          "createdAt": "2025-08-28T08:33:27.147Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "c3b9b257-20b8-42ab-a59a-04349e06f2ef",
-          "text": "апр",
-          "createdAt": "2025-08-28T08:34:37.419Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "b5a5f39b-fb8d-41c5-ae5b-4b7d53267074",
-          "text": "апр",
-          "createdAt": "2025-08-28T08:34:57.312Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "7c970358-821a-4e1a-911d-c91de793afb2",
-          "text": "апр",
-          "createdAt": "2025-08-28T08:35:07.163Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "c1fe5abd-6041-45fa-afe5-e71f8973688f",
-          "text": "олд",
-          "createdAt": "2025-08-28T08:35:28.396Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "bd42db82-2544-4414-99b6-4ab7a192e7a8",
-          "text": "вап",
-          "createdAt": "2025-08-28T08:36:28.142Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "ebdd477f-88fa-4887-8e0f-06afcc50d414",
-          "text": "рол",
-          "createdAt": "2025-08-28T08:45:02.190Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "cc48f9d3-e29f-472e-a808-28d9dce9443d",
-          "text": "гшщ",
-          "createdAt": "2025-08-28T08:45:10.912Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "0b162e53-7e6b-40e7-8efa-5d3527abec11",
-          "text": "про",
-          "createdAt": "2025-08-28T08:48:39.118Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "522b56ae-d378-4206-b640-b422765bc039",
-          "text": "апо",
-          "createdAt": "2025-08-28T08:55:15.047Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
           "id": "d72e6ada-97e5-4294-91e6-94ed6ba4890f",
           "text": "ghj",
           "createdAt": "2025-08-28T09:05:37.629Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        },
+        {
+          "id": "e299fcde-7f63-4eba-a956-c26102b2a72b",
+          "text": "qwe",
+          "createdAt": "2025-09-01T13:44:00.328Z",
           "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         }
       ]
     },
     {
       "id": "3",
-      "avatar": "https://example.com/avatars/family.jpg",
       "name": "Family Group",
       "type": "group",
       "users": [
@@ -398,8 +131,7 @@
     },
     {
       "id": "4",
-      "avatar": "https://example.com/avatars/chat2.jpg",
-      "name": "Maria & Igor",
+      "name": "Maria-Ivanova",
       "type": "private",
       "users": [
         "2c9be4ad-1326-4e00-92db-9ddd850969e8",
@@ -431,6 +163,29 @@
           "user": "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
         }
       ]
+    },
+    {
+      "id": "3f0efdb2-ebaf-4b96-bf85-92f26d817f55",
+      "name": "Maria-Ivanova",
+      "type": "private",
+      "users": [
+        "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1",
+        "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
+      ],
+      "messages": [
+        {
+          "id": "ba2207ef-b88a-460d-a8ef-6e25c950666b",
+          "text": "2",
+          "createdAt": "2025-08-31T18:06:45.265Z",
+          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+        }
+      ],
+      "lastMessage": {
+        "id": "ba2207ef-b88a-460d-a8ef-6e25c950666b",
+        "text": "2",
+        "createdAt": "2025-08-31T18:06:45.265Z",
+        "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+      }
     }
   ]
 }

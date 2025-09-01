@@ -1,4 +1,5 @@
 import { setCookie, getCookie } from "./cookies";
+import type { TChat, TMessage, TUser } from "./types";
 
 const URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:3001";
 
@@ -60,12 +61,6 @@ export const fetchWithRefresh = async <T>(
   }
 };
 
-export type TUser = {
-  email: string;
-  name: string;
-  id: string;
-};
-
 export type TRegisterData = {
   email: string;
   name: string;
@@ -109,7 +104,8 @@ export const getUsersApi = (filter = {}) =>
     method: "GET",
     headers: {
       "Content-Type": "application/json",
-    },
+      authorization: getCookie("accessToken"),
+    } as HeadersInit,
   }).then((res) => {
     return checkResponse<TUsersResponse>(res);
   });
@@ -177,23 +173,6 @@ export const registerUserApi = (data: TRegisterData) =>
       return Promise.reject(data);
     });
 
-export type TMessage = {
-  id: string;
-  text: string;
-  createdAt: string;
-  user: string;
-};
-
-export type TChat = {
-  id: string;
-  avatar?: string;
-  type: string;
-  users: string[];
-  lastMessage: TMessage;
-  messages: TMessage[];
-  name: string;
-};
-
 type TChatsResponse = TServerResponse<{
   chats: TChat[];
   message?: string;
@@ -244,18 +223,19 @@ export const createMessageApi = (data: { message: TMessage; chatId: string }) =>
 
 type TNewChatResponse = TServerResponse<{
   message: TMessage;
+  chat: TChat;
 }>;
 
-export const createChatApi = (otherUserId: string, message: string) => {
+export const createChatApi = (chat: TChat) => {
   fetchWithRefresh<TNewChatResponse>(`${URL}/api/chat/private`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json;charset=utf-8",
       authorization: getCookie("accessToken"),
     } as HeadersInit,
-    body: JSON.stringify({ otherUserId: otherUserId, message: message }),
+    body: JSON.stringify(chat),
 }).then((data) => {
-  if (data?.success) return data.message;
+  if (data?.success) return data.chat;
   return Promise.reject(data);
 })
 }
