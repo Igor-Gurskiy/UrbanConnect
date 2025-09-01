@@ -1,17 +1,14 @@
 import { Avatar, List, Typography } from "antd";
-import { type FC } from "react";
-import type { TChatList, TChat } from "./types";
+import { useCallback, type FC } from "react";
+import type { TChatList } from "./types";
+import type { TChat } from "../../../utils/types";
 
-export const ChatListUI: FC<TChatList> = ({
-  chats,
-  onChatSelect,
-  user,
-  users,
-}) => {
-  const avatarContent = (chat: TChat) => {
-    if (chat.avatar === undefined) return null;
-    return chat.name?.slice(0, 1).toUpperCase();
-  };
+export const ChatListUI: FC<TChatList> = ({ chats, onChatSelect }) => {
+  
+  const avatarContent = useCallback((chat: TChat) => {
+    const avatar = chat.avatar ? null : chat.name.slice(0, 1).toUpperCase();
+    return avatar;
+  }, []);
 
   const formatTime = (time: string) => {
     const date = new Date(time);
@@ -24,10 +21,7 @@ export const ChatListUI: FC<TChatList> = ({
 
   const chatName = (chat: TChat) => {
     if (chat.type === "group") return chat.name;
-    const otherUserId = chat.users.find((u) => u !== user?.id);
-    if (!otherUserId) return "Unknown";
-    const otherUser = users.find((u) => u.id === otherUserId);
-    return otherUser ? otherUser.name : "Unknown 2";
+    return chat.name.replace("-", " ");
   };
 
   return (
@@ -37,7 +31,7 @@ export const ChatListUI: FC<TChatList> = ({
           display: "flex",
           justifyContent: "center",
           width: "100%",
-          padding: "16px"
+          padding: "16px",
         }}
       >
         <List
@@ -55,7 +49,7 @@ export const ChatListUI: FC<TChatList> = ({
                 padding: "12px 16px",
                 borderBottom: "1px solid #f0f0f0",
               }}
-              onClick={() => onChatSelect(chat.id)}
+              onClick={() => onChatSelect(chat)}
             >
               {" "}
               <div
@@ -86,13 +80,15 @@ export const ChatListUI: FC<TChatList> = ({
                       textOverflow: "ellipsis",
                     }}
                   >
-                    {chat.lastMessage.text}
+                    {chat.lastMessage?.text}
                   </Typography.Paragraph>
                 </div>
               </div>
-              <Typography.Paragraph>
-                {formatTime(chat.lastMessage.createdAt)}
-              </Typography.Paragraph>
+              {chat.lastMessage && (
+                <Typography.Paragraph>
+                  {formatTime(chat.lastMessage.createdAt)}
+                </Typography.Paragraph>
+              )}
             </List.Item>
           )}
         ></List>

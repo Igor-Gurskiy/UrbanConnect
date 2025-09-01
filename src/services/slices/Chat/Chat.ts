@@ -5,7 +5,7 @@ import {
   getChatByIdApi,
   createChatApi,
 } from "../../../utils/urbanConnect-api";
-import type { TChat, TMessage } from "../../../utils/urbanConnect-api";
+import type { TChat, TMessage } from "../../../utils/types";
 
 type TChatState = {
   chats: TChat[];
@@ -26,10 +26,10 @@ export const createMessage = createAsyncThunk(
   async (data: TMessageData) => await createMessageApi(data)
 );
 
-export const createChat = createAsyncThunk(
+export const createChatPrivate = createAsyncThunk(
   "chat/createChat",
-  async (data: { otherUserId: string; message: string }) =>
-    await createChatApi(data.otherUserId, data.message)
+  async (data: TChat ) =>
+    await createChatApi(data)
 );
 
 export const getChatById = createAsyncThunk(
@@ -82,16 +82,15 @@ export const ChatSlice = createSlice({
       .addCase(createMessage.pending, (state) => {
         state.error = "";
       })
-      // .addCase(createChat.fulfilled, (state, action) => {
-      //   // const newChat = action.payload.chat;
-      //   // state.chats.push(newChat);
-      //   // state.openChat = newChat;
-      //   state.error = "";
-      // })
-      .addCase(createChat.rejected, (state, action) => {
+      .addCase(createChatPrivate.fulfilled, (state, action) => {
+        const newChat = action.meta.arg;
+        state.chats.push(newChat);
+        state.error = "";
+      })
+      .addCase(createChatPrivate.rejected, (state, action) => {
         state.error = action.error.message || "";
       })
-      .addCase(createChat.pending, (state) => {
+      .addCase(createChatPrivate.pending, (state) => {
         state.error = "";
       })
       .addCase(getChatById.fulfilled, (state, action) => {
@@ -117,7 +116,5 @@ export const ChatSlice = createSlice({
 });
 
 export const { selectChats, selectChatIsLoading } = ChatSlice.selectors;
-
-// export const { addMessage } = ChatSlice.actions;
 
 export default ChatSlice.reducer;

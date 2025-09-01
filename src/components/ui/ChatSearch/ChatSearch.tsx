@@ -1,18 +1,27 @@
 import { Input, List } from "antd";
-import type { TUser, TChatSearch } from './types';
+import type { TChatSearch } from './types';
 import type { FC } from "react";
+import type { TUser } from "../../../utils/types";
+import React, { useCallback } from "react";
 
-export const ChatSearchUI: FC<TChatSearch> = ({search, setSearch, selectedUsers, onUserSelect}) => {
+export const ChatSearchUI: FC<TChatSearch> = React.memo(({search, setSearch, selectedUsers, onUserSelect}) => {
     // const avatarContent = (user: TUser) => {
     //     if (user?.avatar === undefined) return null;
     //     return user.name?.slice(0, 1).toUpperCase();
     //   };
+  const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setSearch(e.target.value);
+  }, [setSearch]);
+  
+  const handleUserSelect = useCallback((user: TUser) => {
+    onUserSelect(user);
+  }, [onUserSelect]);
 
     return (
     <div style={{ padding: '16px', position: 'relative' }}>
       <Input 
         value={search} 
-        onChange={(e) => setSearch(e.target.value)} 
+        onChange={handleSearchChange} 
         placeholder="Search by user ID..."
         style={{}}
       />
@@ -40,7 +49,7 @@ export const ChatSearchUI: FC<TChatSearch> = ({search, setSearch, selectedUsers,
                     border: '1px solid #f0f0f0',
                     marginBottom: '4px',
                   }}
-                  onClick={() => onUserSelect(user)}
+                  onClick={()=>handleUserSelect(user)}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor = '#f5f5f5';
                   }}
@@ -69,4 +78,4 @@ export const ChatSearchUI: FC<TChatSearch> = ({search, setSearch, selectedUsers,
       )}
     </div>
   );
-};
+});

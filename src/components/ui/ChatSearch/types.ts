@@ -1,9 +1,4 @@
-export type TUser = {
-    id: string,
-    name: string,
-    email: string,
-    avatar?: string
-}
+import type { TUser } from "../../../utils/types";
 
 export type TChatSearch = {
     search: string,

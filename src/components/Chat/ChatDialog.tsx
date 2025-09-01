@@ -1,73 +1,76 @@
 import type { FC } from 'react';
-import { useState, useEffect } from 'react';
+import { useCallback, useMemo } from 'react';
 import { ChatDialogUI } from '../ui/Chat/Chat';
 import { useSelector, useDispatch } from '../../services/store';
 import { selectUser } from '../../services/slices/Profile/Profile';
-import { createMessage } from '../../services/slices/Chat/Chat';
-import { getUserByIdApi } from '../../utils/urbanConnect-api';
-import type { TMessage } from '../ui/ChatList/types';
+import { createChatPrivate, createMessage } from '../../services/slices/Chat/Chat';
 import { v4 as uuidv4 } from 'uuid';
+import type { TChat, TMessage } from '../../utils/types';
+import React from 'react';
 
 interface IChatDialog {
-  chatId: string
+  chat: TChat;
+  onChatCreated: (chat: TChat) => void
 }
-export const ChatDialog: FC<IChatDialog> = ({chatId}) => {
+export const ChatDialog: FC<IChatDialog> = React.memo(({chat, onChatCreated}) => {
 
-  const [chatName, setChatName] = useState('');
   const user = useSelector(selectUser);
-  const chat = useSelector((state) => 
-    state.chat.chats.find(c => c.id === chatId)
-  );
   const dispatch = useDispatch();
 
-  useEffect(() => {
-    if (!chat) return;
-    if (chat.type === 'private') {
-      const otherUserId = chat.users.find(id => id !== user?.id);
-      if (otherUserId) {
-        getUserByIdApi(otherUserId)
-          .then(data => {
-            setChatName(data.success ? data.user.name.replace('-', ' ') : otherUserId);
-          })
-          .catch(() => {
-            setChatName(otherUserId);
-          });
-      }
-    } else {
-      setChatName(chat.name || '');
-    }
-  }, [chat, user]);
-
-  const handleSend = (messageText: string) => {
-    if (user && chatId && user.id) {
-      const message: TMessage = {
+  const handleSend = useCallback(async (messageText: string) => {
+    if (!user || !chat) return;
+    const message: TMessage = {
         id: uuidv4(),
         text: messageText,
         createdAt: new Date().toISOString(),
         user: user.id
       }
 
-      dispatch(createMessage({chatId, message}));
+    if (chat.id.startsWith('temp-')) {
+      // Создаем новый постоянный чат
+      const newChat = {
+        ...chat,
+        id: uuidv4(),
+        messages: [message],
+        lastMessage: message
+      }
+      
+      await dispatch(createChatPrivate(newChat))
+          // Вызываем callback из родительского компонента
+             onChatCreated(newChat);
+        // await dispatch(getChats())
+    } else {
+      // Отправляем сообщение в существующий чат
+      dispatch(createMessage({chatId: chat.id, message}));
     }
-  }
-  const handleSmileClick = () => {
+    
+  }, [user, chat, dispatch, onChatCreated]);
+  
+  const handleSmileClick = useCallback(() => {
     alert('Smile clicked');
-  };
+  }, []);
 
-  const handleFileAttach = () => {
+  const handleFileAttach = useCallback(() => {
     alert('File attach clicked');
-  };
+  }, []);
 
+  const chatDialogProps = useMemo(() => ({
+    name: chat?.name || '',
+    avatar: chat?.avatar,
+    isOnline: false,
+    onSend: handleSend,
+    messages: chat?.messages || [],
+    handleSmileClick,
+    handleFileAttach,
+    user: user,
+    type: chat?.type || ''
+  }), [chat, handleSend, handleSmileClick, handleFileAttach, user]);
+
+  return <ChatDialogUI {...chatDialogProps} />;
+}, (prevProps, nextProps) => {
   return (
-    <ChatDialogUI
-      name={chatName}
-      isOnline={false}
-      onSend={handleSend}
-      messages={chat?.messages || []}
-      handleSmileClick={handleSmileClick}
-      handleFileAttach={handleFileAttach}
-      user={user}
-      type={chat?.type || ''}
-    />
+    prevProps.chat?.id === nextProps.chat?.id &&
+    prevProps.chat?.messages?.length === nextProps.chat?.messages?.length &&
+    prevProps.onChatCreated === nextProps.onChatCreated
   );
-};
+});

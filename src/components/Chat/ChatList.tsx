@@ -1,36 +1,37 @@
 import type { FC } from "react";
-import { useEffect } from "react";
+import { useCallback, useEffect } from "react";
 import { ChatListUI } from "../ui/ChatList/ChatList";
 import { useSelector, useDispatch } from "../../services/store";
-import { selectChats, getChats } from "../../services/slices/Chat/Chat";
 import {
   selectUser,
-  selectUsers,
   getUsers,
 } from "../../services/slices/Profile/Profile";
+import type { TChat } from "../../utils/types";
+import React from "react";
+// import React from "react";
 
 interface IChatListProps {
-  onChatSelect: (chatId: string) => void;
+  chats: TChat[];
+  onChatSelect: (chat: TChat) => void;
 }
-export const ChatList: FC<IChatListProps> = ({ onChatSelect }) => {
+export const ChatList: FC<IChatListProps> = React.memo(({ chats, onChatSelect }) => {
   const dispatch = useDispatch();
-  const chats = useSelector(selectChats);
   const user = useSelector(selectUser);
-  const users = useSelector(selectUsers);
 
   useEffect(() => {
     dispatch(getUsers());
-    dispatch(getChats());
   }, [dispatch]);
-  
+
+  const handleChatSelect = useCallback((chat: TChat) => {
+    onChatSelect(chat);
+  }, [onChatSelect]);
+
   return (
     user && (
       <ChatListUI
         chats={chats}
-        onChatSelect={onChatSelect}
-        user={user}
-        users={users}
+        onChatSelect={handleChatSelect }
       />
     )
   );
-};
+});
