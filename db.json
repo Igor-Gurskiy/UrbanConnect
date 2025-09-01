@@ -32,10 +32,10 @@
         "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
       ],
       "lastMessage": {
-        "id": "aecb5451-72ba-490d-88b4-986a4f08a086",
-        "text": "jh",
-        "createdAt": "2025-08-29T19:49:59.817Z",
-        "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+        "id": "21e875d0-1d56-4ebe-9fce-6a9247427add",
+        "text": "hj",
+        "createdAt": "2025-09-01T13:44:12.536Z",
+        "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
       },
       "messages": [
         {
@@ -49,6 +49,12 @@
           "text": "jh",
           "createdAt": "2025-08-29T19:49:59.817Z",
           "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+        },
+        {
+          "id": "21e875d0-1d56-4ebe-9fce-6a9247427add",
+          "text": "hj",
+          "createdAt": "2025-09-01T13:44:12.536Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         }
       ]
     },
@@ -62,9 +68,9 @@
         "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
       ],
       "lastMessage": {
-        "id": "d72e6ada-97e5-4294-91e6-94ed6ba4890f",
-        "text": "ghj",
-        "createdAt": "2025-08-28T09:05:37.629Z",
+        "id": "e299fcde-7f63-4eba-a956-c26102b2a72b",
+        "text": "qwe",
+        "createdAt": "2025-09-01T13:44:00.328Z",
         "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
       },
       "messages": [
@@ -78,6 +84,12 @@
           "id": "d72e6ada-97e5-4294-91e6-94ed6ba4890f",
           "text": "ghj",
           "createdAt": "2025-08-28T09:05:37.629Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        },
+        {
+          "id": "e299fcde-7f63-4eba-a956-c26102b2a72b",
+          "text": "qwe",
+          "createdAt": "2025-09-01T13:44:00.328Z",
           "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         }
       ]

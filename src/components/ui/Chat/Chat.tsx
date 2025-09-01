@@ -56,10 +56,43 @@ export const ChatDialogUI: FC<TChatDialog> = React.memo(({
     scrollToBottom();
   }, [messages, scrollToBottom]);
 
-  const MessageItem = useCallback((item: TMessage) => {
-  const isCurrentUser = isCurrentUserMessage(item);
-  return <MessageItemUI item={item} isCurrentUser={isCurrentUser} />;
-}, [isCurrentUserMessage]);
+  const formatMessageDate = useCallback((dateString: string): string => {
+  const date = new Date(dateString);
+  return date.toLocaleDateString('ru-RU', {
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+}, []);
+
+const isSameDay = useCallback((date1: string, date2: string): boolean => {
+  const d1 = new Date(date1);
+  const d2 = new Date(date2);
+  return d1.toDateString() === d2.toDateString();
+}, []);
+
+  const MessageItem = useCallback((item: TMessage, index: number) => {
+    const isCurrentUser = isCurrentUserMessage(item);
+    const showDate = index === 0 || !isSameDay(item.createdAt, messages[index - 1].createdAt);
+    
+    return (
+      <>
+        {showDate && (
+          <div style={{
+            textAlign: 'center',
+            padding: '8px',
+            margin: '10px 0',
+            color: '#666',
+            fontSize: '12px',
+            fontWeight: 'bold'
+          }}>
+            {formatMessageDate(item.createdAt)}
+          </div>
+        )}
+        <MessageItemUI item={item} isCurrentUser={isCurrentUser} />
+      </>
+    );
+  }, [isCurrentUserMessage, messages]);
 
   return (
     <>
