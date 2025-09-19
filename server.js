@@ -398,7 +398,7 @@ app.get("/chats", async (req, res) => {
     }
 
     const userChats = db.chats.filter((chat) =>
-      chat.users.includes(decoded.id)
+      chat.users.includes(decoded.id) || chat.usersDeleted.includes(decoded.id)
     );
 
     const formatedChats = userChats.map((chat) => {
@@ -410,6 +410,8 @@ app.get("/chats", async (req, res) => {
         users: chat.users,
         lastMessage: chat.lastMessage,
         messages: chat.messages,
+        usersDeleted: chat.usersDeleted,
+        createdBy: chat.createdBy,
       };
     });
 
@@ -501,7 +503,94 @@ app.post("/api/message", async (req, res) => {
   }
 });
 
-// Создание чата
+// удаление чата
+app.delete("/api/chats/:id", async (req, res) => {
+  try {
+
+    const db = await readDB();
+    const chatId = req.params.id;
+    const userId = req.body.userId;
+    const chat = db.chats.find((chat) => chat.id === chatId);
+    const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
+
+    if (chatIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+    if (chat.users.length > 1) {
+      db.chats[chatIndex].usersDeleted.push(userId);
+      db.chats[chatIndex].users = db.chats[chatIndex].users.filter(user => user !== userId);
+    } else {
+      db.chats.splice(chatIndex, 1)[0];
+    }
+
+    await writeDB(db);
+
+    return res.status(200).json({
+      success: true,
+      deletedChat: chat,
+    });
+  } catch (error) {
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server error while deleting chat" 
+    });
+  }
+});
+
+// Восстановление удаленного чата
+app.patch("/api/chats/:id", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+
+    const db = await readDB();
+    const chatId = req.params.id;
+    const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
+
+    if (chatIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+    const chat = db.chats[chatIndex];
+    const userId = decoded.id;
+    if (!chat.usersDeleted.includes(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "User is not in deleted users list",
+      });
+    }
+    chat.usersDeleted = chat.usersDeleted.filter(user => user !== userId);
+    if (!chat.users.includes(userId)) {
+      chat.users.push(userId);
+    }
+    await writeDB(db);
+
+    return res.status(200).json({
+      success: true,
+      chat: db.chats[chatIndex],
+    });
+    } catch (error) {
+      return res.status(500).json({ 
+        success: false, 
+        message: "Server error while restoring chat" 
+      });
+    }
+})
+
+// Создание чата private
 app.post("/api/chat/private", async (req, res) => {
   try {
     const chat = req.body;
@@ -520,6 +609,182 @@ app.post("/api/chat/private", async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Создание чата group
+app.post("/api/chat/group", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const chat = req.body;
+    const db = await readDB();
+    if (!chat.users.includes(decoded.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "User must be included in the group",
+      });
+    }
+    db.chats.push(chat);
+    await writeDB(db);
+
+    return res.status(200).json({
+      success: true,
+      chat: chat,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// Редактирование чата
+app.patch("/api/chats/group/edit/:id", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const userId = decoded.id;
+
+    const { id } = req.params;
+    const { name, avatar } = req.body;
+    const db = await readDB();
+    const chatIndex = db.chats.findIndex(chat => chat.id === id);
+
+    if (chatIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+
+    const chat = db.chats[chatIndex];
+
+    if (chat.type !== "group") {
+      return res.status(400).json({
+        success: false,
+        message: "Only group chats can be edited",
+      });
+    }
+
+    if (chat.createdBy !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Only chat creator can edit the group",
+      });
+    }
+
+    if (name !== undefined) {
+      db.chats[chatIndex].name = name;
+    }
+
+    if (avatar !== undefined) {
+      db.chats[chatIndex].avatar = avatar;
+    }
+
+    await writeDB(db);
+
+    return res.status(200).json({
+      success: true,
+      chat: db.chats[chatIndex],
+    });
+  } catch (error) {
+    console.error("Error updating chat:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server error while updating chat" 
+    });
+  }
+});
+
+// Добавление пользователя в чат
+app.patch("/api/chats/group/addUser/:id", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const userId = decoded.id;
+
+    const { id } = req.params;
+    const { user } = req.body;
+    
+    const db = await readDB();
+    const chatIndex = db.chats.findIndex(chat => chat.id === id);
+
+    if (chatIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+
+    const chat = db.chats[chatIndex];
+
+    if (chat.type !== "group") {
+      return res.status(400).json({
+        success: false,
+        message: "Only group chats can add users",
+      });
+    }
+
+    if (chat.createdBy !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Only chat creator can add users to the group",
+      });
+    }
+
+    const userExists = db.users.some(u => u.id === user);
+    if (!userExists) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (!chat.users.includes(user)) {
+      chat.users.push(user);
+      await writeDB(db);
+      
+      return res.status(200).json({
+        success: true,
+        chat: db.chats[chatIndex],
+        message: "User added successfully"
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "User already in the group",
+      });
+    }
+    
+  } catch (error) {
+    console.error("Error adding user to chat:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server error while adding user to chat" 
+    });
   }
 });
 

@@ -1,6 +1,7 @@
-import type { TChat } from "../../../utils/types";
+import type { TChat } from '../../../utils/types';
 
 export type TChatList = {
-  chats: TChat[];
-  onChatSelect: (chat: TChat) => void;
+	chats: TChat[];
+	onChatSelect: (chat: TChat) => void;
+	onChatDelete: (chatId: string) => void;
 };

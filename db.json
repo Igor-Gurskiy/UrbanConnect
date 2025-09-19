@@ -31,10 +31,11 @@
         "2c9be4ad-1326-4e00-92db-9ddd850969e8",
         "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
       ],
+      "usersDeleted": [],
       "lastMessage": {
-        "id": "21e875d0-1d56-4ebe-9fce-6a9247427add",
-        "text": "hj",
-        "createdAt": "2025-09-01T13:44:12.536Z",
+        "id": "01718781-7151-48bc-9aca-40524a7bd474",
+        "text": "й",
+        "createdAt": "2025-09-16T13:52:57.439Z",
         "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
       },
       "messages": [
@@ -55,6 +56,18 @@
           "text": "hj",
           "createdAt": "2025-09-01T13:44:12.536Z",
           "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        },
+        {
+          "id": "c5c6331e-6f76-4f9d-b554-17c12869c845",
+          "text": "qwet",
+          "createdAt": "2025-09-16T10:53:27.454Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        },
+        {
+          "id": "01718781-7151-48bc-9aca-40524a7bd474",
+          "text": "й",
+          "createdAt": "2025-09-16T13:52:57.439Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         }
       ]
     },
@@ -67,6 +80,7 @@
         "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1",
         "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
       ],
+      "usersDeleted": [],
       "lastMessage": {
         "id": "e299fcde-7f63-4eba-a956-c26102b2a72b",
         "text": "qwe",
@@ -102,6 +116,7 @@
         "2c9be4ad-1326-4e00-92db-9ddd850969e8",
         "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
       ],
+      "usersDeleted": [],
       "lastMessage": {
         "id": "10",
         "text": "Mom, I'll be home late today",
@@ -137,6 +152,7 @@
         "2c9be4ad-1326-4e00-92db-9ddd850969e8",
         "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
       ],
+      "usersDeleted": [],
       "lastMessage": {
         "id": "13",
         "text": "The documents are ready for review",
@@ -165,27 +181,86 @@
       ]
     },
     {
-      "id": "3f0efdb2-ebaf-4b96-bf85-92f26d817f55",
+      "id": "01da19b8-3fe8-48be-9f52-dfec93703a36",
       "name": "Maria-Ivanova",
       "type": "private",
       "users": [
-        "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1",
         "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
       ],
       "messages": [
         {
-          "id": "ba2207ef-b88a-460d-a8ef-6e25c950666b",
+          "id": "865dc038-9c40-4966-aad3-4a26f8033337",
           "text": "2",
-          "createdAt": "2025-08-31T18:06:45.265Z",
+          "createdAt": "2025-09-02T10:29:41.852Z",
+          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+        },
+        {
+          "id": "199f84a7-8996-46a2-a421-acc046311c33",
+          "text": "2",
+          "createdAt": "2025-09-02T10:45:33.192Z",
+          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+        },
+        {
+          "id": "0fc82580-4f5a-4e58-8426-14afc1bf7233",
+          "text": "2",
+          "createdAt": "2025-09-02T10:45:51.420Z",
+          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+        },
+        {
+          "id": "040961b0-6df8-40e4-aeb9-ff98b53d5ff0",
+          "text": "2",
+          "createdAt": "2025-09-02T10:46:29.866Z",
           "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
         }
       ],
       "lastMessage": {
-        "id": "ba2207ef-b88a-460d-a8ef-6e25c950666b",
+        "id": "040961b0-6df8-40e4-aeb9-ff98b53d5ff0",
         "text": "2",
-        "createdAt": "2025-08-31T18:06:45.265Z",
+        "createdAt": "2025-09-02T10:46:29.866Z",
         "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-      }
+      },
+      "usersDeleted": [
+        "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+      ]
+    },
+    {
+      "id": "e1f1e8d5-bf8a-4b1f-8b33-39f429d77e05",
+      "name": "Family",
+      "avatar": "",
+      "type": "group",
+      "users": [
+        "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+      ],
+      "messages": [],
+      "lastMessage": null,
+      "usersDeleted": [],
+      "createdBy": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+    },
+    {
+      "id": "a5fb890b-d7b3-47f1-bb95-08f3d8b9bd29",
+      "name": "Family",
+      "avatar": "",
+      "type": "group",
+      "users": [
+        "2c9be4ad-1326-4e00-92db-9ddd850969e8",
+        "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+      ],
+      "messages": [
+        {
+          "id": "ac33a0c7-7c62-4f30-b3fb-1c2ee20b122b",
+          "text": "qwe",
+          "createdAt": "2025-09-18T12:29:16.078Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        }
+      ],
+      "lastMessage": {
+        "id": "ac33a0c7-7c62-4f30-b3fb-1c2ee20b122b",
+        "text": "qwe",
+        "createdAt": "2025-09-18T12:29:16.078Z",
+        "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+      },
+      "usersDeleted": [],
+      "createdBy": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
     }
   ]
 }

@@ -1,20 +1,17 @@
-import { configureStore, combineSlices } from "@reduxjs/toolkit";
+import { configureStore, combineSlices } from '@reduxjs/toolkit';
 import {
-  type TypedUseSelectorHook,
-  useDispatch as dispatchHook,
-  useSelector as selectorHook
+	type TypedUseSelectorHook,
+	useDispatch as dispatchHook,
+	useSelector as selectorHook,
 } from 'react-redux';
-import { ProfileSlice } from "./slices/Profile/Profile";
-import { ChatSlice } from "./slices/Chat/Chat";
+import { ProfileSlice } from './slices/Profile/Profile';
+import { ChatSlice } from './slices/Chat/Chat';
 
-export const rootReducer = combineSlices(
-  ProfileSlice,
-  ChatSlice
-);
+export const rootReducer = combineSlices(ProfileSlice, ChatSlice);
 
 const store = configureStore({
-    reducer: rootReducer
-})
+	reducer: rootReducer,
+});
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;

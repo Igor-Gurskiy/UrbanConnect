@@ -9,8 +9,8 @@
 // }
 
 export type TLogModal = {
-    title: string,
-    handleCancel: () => void,
-    open: boolean,
-   children: React.ReactNode
-}
+	title: string;
+	handleCancel: () => void;
+	open: boolean;
+	children: React.ReactNode;
+};
