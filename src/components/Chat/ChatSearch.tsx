@@ -13,48 +13,35 @@ export const ChatSearch = memo(
 	({ search, setSearch, onUserSelect }: ChatSearchProps) => {
 		const [users, setUsers] = useState<TUser[]>([]);
 		const timeoutRef = useRef<NodeJS.Timeout | null>(null);
-		const abortControllerRef = useRef<AbortController | null>(null);
-
-		const debounceSearch = useCallback(async (searchValue: string) => {
-			if (!search.trim()) {
-				setUsers([]);
-				return;
-			}
-
-			if (abortControllerRef.current) {
-				abortControllerRef.current.abort();
-			}
-
-			abortControllerRef.current = new AbortController();
-
-			try {
-				const usersFiltred = await getUsersApi(
-					{ id: searchValue },
-					{ signal: abortControllerRef.current.signal }
-				).then((data) => data.users);
-				setUsers(usersFiltred);
-			} catch (error) {
-				console.error('Error fetching users:', error);
-				setUsers([]);
-			}
-		}, []);
 
 		useEffect(() => {
 			if (timeoutRef.current) {
 				clearTimeout(timeoutRef.current);
 			}
-			timeoutRef.current = setTimeout(() => {
-				debounceSearch(search);
+
+			if (!search.trim()) {
+				setUsers([]);
+				return;
+			}
+
+			timeoutRef.current = setTimeout(async () => {
+				try {
+					const usersFiltred = await getUsersApi({ search: search }).then(
+						(data) => data.users
+					);
+					setUsers(usersFiltred);
+				} catch (error) {
+					console.error('Error fetching users:', error);
+					setUsers([]);
+				}
 			}, 300);
+
 			return () => {
 				if (timeoutRef.current) {
 					clearTimeout(timeoutRef.current);
 				}
-				if (abortControllerRef.current) {
-					abortControllerRef.current.abort();
-				}
 			};
-		}, [search, debounceSearch]);
+		}, [search]);
 
 		const handleUserSelect = useCallback(
 			(user: TUser) => {

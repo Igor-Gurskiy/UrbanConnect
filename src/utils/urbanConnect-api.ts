@@ -99,14 +99,13 @@ export const getUserByIdApi = (id: string) =>
 
 export type TUsersResponse = TServerResponse<{ users: TUser[] }>;
 
-export const getUsersApi = (filter = {}, options: RequestInit = {}) =>
+export const getUsersApi = (filter: { search?: string } = {}) =>
 	fetch(`${URL}/api/users?${new URLSearchParams(filter).toString()}`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
 			authorization: getCookie('accessToken'),
 		} as HeadersInit,
-		...options,
 	}).then((res) => {
 		return checkResponse<TUsersResponse>(res);
 	});

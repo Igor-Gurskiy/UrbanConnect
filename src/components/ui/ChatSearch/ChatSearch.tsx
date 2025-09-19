@@ -62,23 +62,12 @@ export const ChatSearchUI: FC<TChatSearch> = memo(
 							background: '#ebebebff',
 						}}
 					>
-						{selectedUsers.length > 0 ? (
+						{selectedUsers.length > 0 && (
 							<List
 								size="small"
 								dataSource={selectedUsers}
 								renderItem={renderUserItem}
 							/>
-						) : (
-							<div
-								style={{
-									textAlign: 'center',
-									color: '#666',
-									padding: '16px 12px 16px',
-									fontSize: '14px',
-								}}
-							>
-								Пользователь с ID "{search}" не найден
-							</div>
 						)}
 					</div>
 				)}

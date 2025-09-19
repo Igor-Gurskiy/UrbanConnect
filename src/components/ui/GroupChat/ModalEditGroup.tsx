@@ -40,7 +40,6 @@ export const ModalEditGroupUI: React.FC<ModalEditGroupUIProps> = memo(
 					initialValues={initialValues}
 					onFinish={handleSubmit}
 					layout="vertical"
-					style={{ padding: '16px 0' }}
 				>
 					<Form.Item
 						name="name"
@@ -54,9 +53,7 @@ export const ModalEditGroupUI: React.FC<ModalEditGroupUIProps> = memo(
 						<Input placeholder="Enter avatar URL (optional)" />
 					</Form.Item>
 
-					<div
-						style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}
-					>
+					<div className="d-flex justify-content-end gap-2">
 						<Button onClick={handleCancel}>Cancel</Button>
 						<Button type="primary" htmlType="submit" loading={loading}>
 							Save

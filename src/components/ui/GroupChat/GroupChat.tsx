@@ -34,10 +34,10 @@ export const GroupChatUI: FC<IGroupChat> = memo(
 
 		return (
 			<Form
+				className="p-5"
 				{...formItemLayout}
 				form={form}
 				variant={variant || 'filled'}
-				style={{ maxWidth: 600, padding: 16 }}
 				initialValues={{ variant: 'filled' }}
 				onFinish={onFinish}
 			>

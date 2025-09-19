@@ -31,12 +31,7 @@ export const ModalAddMemberUI: React.FC<ModalAddMember> = memo(
 				footer={null}
 			>
 				{error && <Alert description={error} type="error" />}
-				<Form
-					form={form}
-					onFinish={handleSubmit}
-					layout="vertical"
-					style={{ padding: '16px 0' }}
-				>
+				<Form form={form} onFinish={handleSubmit} layout="vertical">
 					<Form.Item
 						name="id"
 						label="id"
@@ -45,9 +40,7 @@ export const ModalAddMemberUI: React.FC<ModalAddMember> = memo(
 						<Input placeholder="Enter user id" />
 					</Form.Item>
 
-					<div
-						style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px' }}
-					>
+					<div className={`d-flex justify-content-end gap-2`}>
 						<Button onClick={handleCancel}>Cancel</Button>
 						<Button type="primary" htmlType="submit" loading={loading}>
 							Save

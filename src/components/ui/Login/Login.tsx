@@ -17,15 +17,10 @@ export const Login: FC<TLogin> = ({
 		wrapperCol: { span: 16 },
 	};
 	return (
-		<Form
-			{...layout}
-			style={{ maxWidth: 600 }}
-			onFinish={handleSubmit}
-			key="auth-form"
-		>
+		<Form {...layout} onFinish={handleSubmit} key="auth-form">
 			{error && (
 				<Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-					<div style={{ color: 'red' }}>{error}</div>
+					<div className="text-red">{error}</div>
 				</Form.Item>
 			)}
 			<Form.Item label="Email" name="Email">

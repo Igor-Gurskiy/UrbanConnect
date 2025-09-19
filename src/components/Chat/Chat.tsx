@@ -187,14 +187,14 @@ export const Chat: FC = () => {
 		dispatch(clearError());
 		setAddGroupModal(false);
 	}, []);
-	const chatSearchProps = useMemo(
-		() => ({
-			search,
-			setSearch: setSearch,
-			onUserSelect: handleUserSelect,
-		}),
-		[search, handleUserSelect]
-	);
+	// const chatSearchProps = useMemo(
+	// 	() => ({
+	// 		search,
+	// 		setSearch: setSearch,
+	// 		onUserSelect: handleUserSelect,
+	// 	}),
+	// 	[search, handleUserSelect]
+	// );
 
 	const chatListProps = useMemo(
 		() => ({
@@ -284,7 +284,11 @@ export const Chat: FC = () => {
 						gap: '2px',
 					}}
 				>
-					<ChatSearch {...chatSearchProps} />
+					<ChatSearch
+						search={search}
+						setSearch={setSearch}
+						onUserSelect={handleUserSelect}
+					/>
 					{renderButtonGroup}
 				</div>
 				<ChatList {...chatListProps} />

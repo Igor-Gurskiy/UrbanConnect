@@ -260,15 +260,17 @@ app.get("/api/users", async (req, res) => {
     const token = authHeader.split(' ')[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-    const { id } = req.query;
+    const { search  } = req.query;
     const db = await readDB();
-    console.log("Search ID:", id);
-    if (!id) {
-      const users = db.users.map((user) => ({
-        id: user.id,
-        email: user.email,
-        name: user.name,
-      }));
+    console.log("Search ID:", search);
+    if (!search ) {
+      const users = db.users
+        .filter(user => user.id !== decoded.id)
+        .map((user) => ({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        }));
       return res.status(200).json({
         success: true,
         users: users,
@@ -276,10 +278,10 @@ app.get("/api/users", async (req, res) => {
     }
 
     const filteredUsers = db.users.filter(user => 
-      user.id !== decoded.id && ( // Исключаем текущего пользователя И
-        user.id.includes(id) || 
-        user.name.includes(id) || 
-        user.email.includes(id)
+      user.id !== decoded.id && (
+        user.id.includes(search) || 
+        user.name.includes(search) || 
+        user.email.includes(search)
       )
     );
 
@@ -401,11 +403,37 @@ app.get("/chats", async (req, res) => {
       chat.users.includes(decoded.id) || chat.usersDeleted.includes(decoded.id)
     );
 
-    const formatedChats = userChats.map((chat) => {
+    // const formatedChats = userChats.map((chat) => {
+    //   return {
+    //     id: chat.id,
+    //     avatar: chat.avatar,
+    //     name: chat.name,
+    //     type: chat.type,
+    //     users: chat.users,
+    //     lastMessage: chat.lastMessage,
+    //     messages: chat.messages,
+    //     usersDeleted: chat.usersDeleted,
+    //     createdBy: chat.createdBy,
+    //   };
+    // });
+
+  const formatedChats = userChats.map((chat) => {
+      let chatName = chat.name;
+      
+      if (chat.type === 'private') {
+        const otherUserId = chat.users.find(userId => userId !== decoded.id);
+        if (otherUserId) {
+          const otherUser = db.users.find(user => user.id === otherUserId);
+          if (otherUser) {
+            chatName = otherUser.name;
+          }
+        }
+      }
+
       return {
         id: chat.id,
         avatar: chat.avatar,
-        name: chat.name,
+        name: chatName,
         type: chat.type,
         users: chat.users,
         lastMessage: chat.lastMessage,
@@ -454,9 +482,23 @@ app.get("/api/chat/:id", async (req, res) => {
       });
     }
 
+    let chatName = chat.name;
+    if (chat.type === 'private') {
+      const otherUserId = chat.users.find(userId => userId !== decoded.id);
+      if (otherUserId) {
+        const otherUser = db.users.find(user => user.id === otherUserId);
+        if (otherUser) {
+          chatName = otherUser.name;
+        }
+      }
+    }
+
     return res.status(200).json({
       success: true,
-      chat,
+      chat: {
+        ...chat,
+        name: chatName
+      },
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });

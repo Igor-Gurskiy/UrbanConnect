@@ -10,40 +10,22 @@ interface TMessageItem {
 export const MessageItemUI = memo(({ item, isCurrentUser }: TMessageItem) => {
 	return (
 		<div
-			style={{
-				display: 'flex',
-				justifyContent: isCurrentUser ? 'flex-end' : 'flex-start',
-				padding: '10px',
-			}}
+			className={`d-flex ${isCurrentUser ? 'justify-content-end' : 'justify-content-start'} p-2`}
 		>
 			<div
+				className={`d-flex gap-2 w-50 p-2 justify-content-between align-items-center`}
 				style={{
-					display: 'flex',
-					gap: '10px',
-					width: '60%',
-					padding: '8px 12px',
 					borderRadius: isCurrentUser ? '18px 18px 0 18px' : '18px 18px 18px 0',
 					backgroundColor: isCurrentUser ? '#1890ff' : '#e6e6e6',
-					alignItems: 'center',
-					justifyContent: 'space-between',
 				}}
 			>
 				<Typography.Paragraph
-					style={{
-						margin: 0,
-						fontSize: '1rem',
-						color: isCurrentUser ? '#fff' : '#000',
-					}}
+					className={`m-0 fs-6 ${isCurrentUser ? 'text-white' : 'text-black'}`}
 				>
 					{item.text}
 				</Typography.Paragraph>
 				<div
-					style={{
-						fontSize: '10px',
-						textAlign: 'right',
-						color: isCurrentUser ? '#fff' : '#000',
-						alignContent: 'flex-end',
-					}}
+					className={`small ${isCurrentUser ? 'text-white' : 'text-black'} text-end`}
 				>
 					{new Date(item.createdAt).toLocaleTimeString([], {
 						hour: '2-digit',
