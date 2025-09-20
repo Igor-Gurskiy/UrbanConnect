@@ -179,7 +179,7 @@ type TChatsResponse = TServerResponse<{
 }>;
 
 export const getChatsApi = () =>
-	fetchWithRefresh<TChatsResponse>(`${URL}/chats`, {
+	fetchWithRefresh<TChatsResponse>(`${URL}/api/chats`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json;charset=utf-8',

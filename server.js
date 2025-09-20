@@ -108,746 +108,744 @@ function broadcastMessage(message) {
     }
   });
 }
+// Регистрация
+app.post("/api/register", async (req, res) => {
+  try {
+    const { email, name, password } = req.body;
 
-app.get("/api/test", (req, res) => {
-  res.json({ message: "Test OK" });
+    const db = await readDB();
+    const existingUser = db.users.find((user) => user.email === email);
+
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "User already exists",
+        user: existingUser,
+      });
+    }
+
+    const newUser = {
+      id: uuidv4(),
+      email,
+      name,
+      password,
+      createdAt: new Date().toISOString(),
+    };
+
+    db.users.push(newUser);
+    await writeDB(db);
+
+    const { accessToken, refreshToken } = generateTokens(newUser.id);
+
+    return res.status(200).json({
+      success: true,
+      message: "User registered successfully",
+      user: {
+        email: newUser.email,
+        name: newUser.name,
+        id: newUser.id,
+      },
+      accessToken,
+      refreshToken,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
 });
 
-// // Регистрация
-// app.post("/api/register", async (req, res) => {
-//   try {
-//     const { email, name, password } = req.body;
+// Вход
+app.post("/api/login", async (req, res) => {
+  try {
+    const { email, password, remember = false } = req.body;
 
-//     const db = await readDB();
-//     const existingUser = db.users.find((user) => user.email === email);
+    const db = await readDB();
+    const existingUser = db.users.find((user) => user.email === email);
 
-//     if (existingUser) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "User already exists",
-//         user: existingUser,
-//       });
-//     }
+    if (!existingUser) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password or email",
+      });
+    }
 
-//     const newUser = {
-//       id: uuidv4(),
-//       email,
-//       name,
-//       password,
-//       createdAt: new Date().toISOString(),
-//     };
+    if (existingUser.password !== password) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password or email",
+      });
+    }
 
-//     db.users.push(newUser);
-//     await writeDB(db);
+    const expiresIn = remember ? "30d" : "15m";
+    const refreshExpiresIn = remember ? "60d" : "1d";
+    const { accessToken, refreshToken } = generateTokens(
+      existingUser.id,
+      expiresIn,
+      refreshExpiresIn
+    );
 
-//     const { accessToken, refreshToken } = generateTokens(newUser.id);
+    return res.status(200).json({
+      success: true,
+      message: "User logged in successfully",
+      user: {
+        email: existingUser.email,
+        name: existingUser.name,
+        id: existingUser.id,
+      },
+      accessToken,
+      refreshToken,
+      remember,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Ошибка сервера" });
+  }
+});
 
-//     return res.status(200).json({
-//       success: true,
-//       message: "User registered successfully",
-//       user: {
-//         email: newUser.email,
-//         name: newUser.name,
-//         id: newUser.id,
-//       },
-//       accessToken,
-//       refreshToken,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "Ошибка сервера" });
-//   }
-// });
+// Получение текущего пользователя
+app.get("/api/user", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
 
-// // Вход
-// app.post("/api/login", async (req, res) => {
-//   try {
-//     const { email, password, remember = false } = req.body;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
 
-//     const db = await readDB();
-//     const existingUser = db.users.find((user) => user.email === email);
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-//     if (!existingUser) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid password or email",
-//       });
-//     }
+    const db = await readDB();
+    const user = db.users.find((user) => user.id === decoded.id);
 
-//     if (existingUser.password !== password) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Invalid password or email",
-//       });
-//     }
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-//     const expiresIn = remember ? "30d" : "15m";
-//     const refreshExpiresIn = remember ? "60d" : "1d";
-//     const { accessToken, refreshToken } = generateTokens(
-//       existingUser.id,
-//       expiresIn,
-//       refreshExpiresIn
-//     );
+    return res.status(200).json({
+      success: true,
+      user: {
+        email: user.email,
+        name: user.name,
+        id: user.id,
+      },
+    });
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired",
+      });
+    }
 
-//     return res.status(200).json({
-//       success: true,
-//       message: "User logged in successfully",
-//       user: {
-//         email: existingUser.email,
-//         name: existingUser.name,
-//         id: existingUser.id,
-//       },
-//       accessToken,
-//       refreshToken,
-//       remember,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "Ошибка сервера" });
-//   }
-// });
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
 
-// // Получение текущего пользователя
-// app.get("/api/user", async (req, res) => {
-//   try {
-//     const authHeader = req.headers.authorization;
-
-//     if (!authHeader) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Not authorized",
-//       });
-//     }
-
-//     const token = authHeader.split(" ")[1];
-//     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-
-//     const db = await readDB();
-//     const user = db.users.find((user) => user.id === decoded.id);
-
-//     if (!user) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
-
-//     return res.status(200).json({
-//       success: true,
-//       user: {
-//         email: user.email,
-//         name: user.name,
-//         id: user.id,
-//       },
-//     });
-//   } catch (error) {
-//     if (error instanceof jwt.TokenExpiredError) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Token expired",
-//       });
-//     }
-
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server error",
-//     });
-//   }
-// });
-
-// // Получение всех пользователей
-// app.get("/api/users", async (req, res) => {
-//   try {
-//     const authHeader = req.headers.authorization;
+// Получение всех пользователей
+app.get("/api/users", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
     
-//     if (!authHeader) {
-//       return res.status(401).json({ success: false, message: 'Not authorized' });
-//     }
+    if (!authHeader) {
+      return res.status(401).json({ success: false, message: 'Not authorized' });
+    }
 
-//     const token = authHeader.split(' ')[1];
-//     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const token = authHeader.split(' ')[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-//     const { search  } = req.query;
-//     const db = await readDB();
-//     console.log("Search ID:", search);
-//     if (!search ) {
-//       const users = db.users
-//         .filter(user => user.id !== decoded.id)
-//         .map((user) => ({
-//           id: user.id,
-//           email: user.email,
-//           name: user.name,
-//         }));
-//       return res.status(200).json({
-//         success: true,
-//         users: users,
-//       });
-//     }
+    const { search  } = req.query;
+    const db = await readDB();
+    console.log("Search ID:", search);
+    if (!search ) {
+      const users = db.users
+        .filter(user => user.id !== decoded.id)
+        .map((user) => ({
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        }));
+      return res.status(200).json({
+        success: true,
+        users: users,
+      });
+    }
 
-//     const filteredUsers = db.users.filter(user => 
-//       user.id !== decoded.id && (
-//         user.id.includes(search) || 
-//         user.name.includes(search) || 
-//         user.email.includes(search)
-//       )
-//     );
+    const filteredUsers = db.users.filter(user => 
+      user.id !== decoded.id && (
+        user.id.includes(search) || 
+        user.name.includes(search) || 
+        user.email.includes(search)
+      )
+    );
 
-//     const users = filteredUsers.map((user) => ({
-//       id: user.id,
-//       email: user.email,
-//       name: user.name,
-//     }));
-//     console.log("Found users:", users.length);
-//     return res.status(200).json({
-//       success: true,
-//       users: users,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// });
+    const users = filteredUsers.map((user) => ({
+      id: user.id,
+      email: user.email,
+      name: user.name,
+    }));
+    console.log("Found users:", users.length);
+    return res.status(200).json({
+      success: true,
+      users: users,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
-// // Получаем пользователя по id
-// app.get("/api/user/:id", async (req, res) => {
-//   try {
-//     const db = await readDB();
-//     const user = db.users.find((user) => user.id === req.params.id);
-//     if (!user) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
+// Получаем пользователя по id
+app.get("/api/user/:id", async (req, res) => {
+  try {
+    const db = await readDB();
+    const user = db.users.find((user) => user.id === req.params.id);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-//     return res.status(200).json({
-//       success: true,
-//       user: {
-//         id: user.id,
-//         email: user.email,
-//         name: user.name,
-//       },
-//     });
-//   } catch {
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// });
+    return res.status(200).json({
+      success: true,
+      user: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+      },
+    });
+  } catch {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
-// // Обновление токена
-// app.post("/api/token", async (req, res) => {
-//   try {
-//     const { refreshToken } = req.body;
+// Обновление токена
+app.post("/api/token", async (req, res) => {
+  try {
+    const { refreshToken } = req.body;
 
-//     if (!refreshToken) {
-//       return res
-//         .status(401)
-//         .json({ success: false, message: "Refresh token is required" });
-//     }
+    if (!refreshToken) {
+      return res
+        .status(401)
+        .json({ success: false, message: "Refresh token is required" });
+    }
 
-//     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
-//     const db = await readDB();
-//     const user = db.users.find((user) => user.id === decoded.id);
+    const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
+    const db = await readDB();
+    const user = db.users.find((user) => user.id === decoded.id);
 
-//     if (!user) {
-//       return res
-//         .status(404)
-//         .json({ success: false, message: "User not found" });
-//     }
+    if (!user) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
+    }
 
-//     const { accessToken, refreshToken: newRefreshToken } = generateTokens(
-//       user.id
-//     );
+    const { accessToken, refreshToken: newRefreshToken } = generateTokens(
+      user.id
+    );
 
-//     return res.status(200).json({
-//       success: true,
-//       accessToken,
-//       refreshToken: newRefreshToken,
-//     });
-//   } catch (error) {
-//     return res
-//       .status(401)
-//       .json({ success: false, message: "Invalid refresh token" });
-//   }
-// });
+    return res.status(200).json({
+      success: true,
+      accessToken,
+      refreshToken: newRefreshToken,
+    });
+  } catch (error) {
+    return res
+      .status(401)
+      .json({ success: false, message: "Invalid refresh token" });
+  }
+});
 
-// // выход
-// app.post("/api/logout", (req, res) => {
-//   try {
-//     return res.status(200).json({
-//       success: true,
-//       message: "Logged out successfully",
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// });
+// выход
+app.post("/api/logout", (req, res) => {
+  try {
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
-// // Получение чатов
-// app.get("/chats", async (req, res) => {
-//   try {
-//     const authHeader = req.headers.authorization;
+// Получение чатов
+app.get("/api/chats", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
 
-//     if (!authHeader) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Not authorized",
-//       });
-//     }
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
 
-//     const token = authHeader.split(" ")[1];
-//     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-//     const db = await readDB();
-//     const user = db.users.find((user) => user.id === decoded.id);
+    const db = await readDB();
+    const user = db.users.find((user) => user.id === decoded.id);
 
-//     if (!user) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-//     const userChats = db.chats.filter((chat) =>
-//       chat.users.includes(decoded.id) || chat.usersDeleted.includes(decoded.id)
-//     );
+    const userChats = db.chats.filter((chat) =>
+      chat.users.includes(decoded.id) || chat.usersDeleted.includes(decoded.id)
+    );
 
-//     // const formatedChats = userChats.map((chat) => {
-//     //   return {
-//     //     id: chat.id,
-//     //     avatar: chat.avatar,
-//     //     name: chat.name,
-//     //     type: chat.type,
-//     //     users: chat.users,
-//     //     lastMessage: chat.lastMessage,
-//     //     messages: chat.messages,
-//     //     usersDeleted: chat.usersDeleted,
-//     //     createdBy: chat.createdBy,
-//     //   };
-//     // });
+    // const formatedChats = userChats.map((chat) => {
+    //   return {
+    //     id: chat.id,
+    //     avatar: chat.avatar,
+    //     name: chat.name,
+    //     type: chat.type,
+    //     users: chat.users,
+    //     lastMessage: chat.lastMessage,
+    //     messages: chat.messages,
+    //     usersDeleted: chat.usersDeleted,
+    //     createdBy: chat.createdBy,
+    //   };
+    // });
 
-//   const formatedChats = userChats.map((chat) => {
-//       let chatName = chat.name;
+  const formatedChats = userChats.map((chat) => {
+      let chatName = chat.name;
       
-//       if (chat.type === 'private') {
-//         const otherUserId = chat.users.find(userId => userId !== decoded.id);
-//         if (otherUserId) {
-//           const otherUser = db.users.find(user => user.id === otherUserId);
-//           if (otherUser) {
-//             chatName = otherUser.name;
-//           }
-//         }
-//       }
+      if (chat.type === 'private') {
+        const otherUserId = chat.users.find(userId => userId !== decoded.id);
+        if (otherUserId) {
+          const otherUser = db.users.find(user => user.id === otherUserId);
+          if (otherUser) {
+            chatName = otherUser.name;
+          }
+        }
+      }
 
-//       return {
-//         id: chat.id,
-//         avatar: chat.avatar,
-//         name: chatName,
-//         type: chat.type,
-//         users: chat.users,
-//         lastMessage: chat.lastMessage,
-//         messages: chat.messages,
-//         usersDeleted: chat.usersDeleted,
-//         createdBy: chat.createdBy,
-//       };
-//     });
+      return {
+        id: chat.id,
+        avatar: chat.avatar,
+        name: chatName,
+        type: chat.type,
+        users: chat.users,
+        lastMessage: chat.lastMessage,
+        messages: chat.messages,
+        usersDeleted: chat.usersDeleted,
+        createdBy: chat.createdBy,
+      };
+    });
 
-//     formatedChats.sort((a, b) => {
-//       const dateA = a.lastMessage ? new Date(a.lastMessage.createdAt) : new Date(0);
-//       const dateB = b.lastMessage ? new Date(b.lastMessage.createdAt) : new Date(0);
-//       return dateB - dateA;
-//     });
+    formatedChats.sort((a, b) => {
+      const dateA = a.lastMessage ? new Date(a.lastMessage.createdAt) : new Date(0);
+      const dateB = b.lastMessage ? new Date(b.lastMessage.createdAt) : new Date(0);
+      return dateB - dateA;
+    });
 
-//     return res.status(200).json({
-//       success: true,
-//       chats: formatedChats,
-//     });
-//   } catch (error) {
-//     if (error instanceof jwt.TokenExpiredError) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Token expired",
-//       });
-//     }
+    return res.status(200).json({
+      success: true,
+      chats: formatedChats,
+    });
+  } catch (error) {
+    if (error instanceof jwt.TokenExpiredError) {
+      return res.status(401).json({
+        success: false,
+        message: "Token expired",
+      });
+    }
 
-//     console.error("Chats error:", error);
-//     return res.status(500).json({
-//       success: false,
-//       message: "Server error",
-//     });
-//   }
-// });
+    console.error("Chats error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Server error",
+    });
+  }
+});
 
-// // Получение чата по id
-// app.get("/api/chat/:id", async (req, res) => {
-//   try {
-//     const authHeader = req.headers.authorization;
+// Получение чата по id
+app.get("/api/chat/:id", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
 
-//     if (!authHeader) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Not authorized",
-//       });
-//     }
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
 
-//     const token = authHeader.split(" ")[1];
-//     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-//     const db = await readDB();
-//     const chat = db.chats.find((chat) => chat.id === req.params.id);
+    const db = await readDB();
+    const chat = db.chats.find((chat) => chat.id === req.params.id);
 
-//     if (!chat) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Chat not found",
-//       });
-//     }
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
 
-//     let chatName = chat.name;
-//     if (chat.type === 'private') {
-//       const otherUserId = chat.users.find(userId => userId !== decoded.id);
-//       if (otherUserId) {
-//         const otherUser = db.users.find(user => user.id === otherUserId);
-//         if (otherUser) {
-//           chatName = otherUser.name;
-//         }
-//       }
-//     }
+    let chatName = chat.name;
+    if (chat.type === 'private') {
+      const otherUserId = chat.users.find(userId => userId !== decoded.id);
+      if (otherUserId) {
+        const otherUser = db.users.find(user => user.id === otherUserId);
+        if (otherUser) {
+          chatName = otherUser.name;
+        }
+      }
+    }
 
-//     return res.status(200).json({
-//       success: true,
-//       chat: {
-//         ...chat,
-//         name: chatName
-//       },
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// });
+    return res.status(200).json({
+      success: true,
+      chat: {
+        ...chat,
+        name: chatName
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
-// // Отправка сообщения в существующем чате
-// app.post("/api/message", async (req, res) => {
-//   try {
-//     const { message, chatId } = req.body;
-//     const db = await readDB();
-//     const chat = db.chats.find((chat) => chat.id === chatId);
+// Отправка сообщения в существующем чате
+app.post("/api/message", async (req, res) => {
+  try {
+    const { message, chatId } = req.body;
+    const db = await readDB();
+    const chat = db.chats.find((chat) => chat.id === chatId);
 
-//     if (!chat) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Chat not found",
-//       });
-//     }
-//     const serverMessage = {
-//       ...message,
-//       id: uuidv4(),
-//       createdAt: new Date().toISOString(),
-//     };
-//     chat.messages.push(serverMessage);
-//     chat.lastMessage = serverMessage;
-//     await writeDB(db);
+    if (!chat) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+    const serverMessage = {
+      ...message,
+      id: uuidv4(),
+      createdAt: new Date().toISOString(),
+    };
+    chat.messages.push(serverMessage);
+    chat.lastMessage = serverMessage;
+    await writeDB(db);
 
-//     // Отправляем сообщение через WebSocket
-//     const messageToSend = {
-//       type: "message",
-//       chatId,
-//       message: serverMessage,
-//     };
+    // Отправляем сообщение через WebSocket
+    const messageToSend = {
+      type: "message",
+      chatId,
+      message: serverMessage,
+    };
 
-//     broadcastMessage(messageToSend);
+    broadcastMessage(messageToSend);
 
-//     return res.status(200).json({
-//       success: true,
-//       message: serverMessage,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// });
+    return res.status(200).json({
+      success: true,
+      message: serverMessage,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
-// // удаление чата
-// app.delete("/api/chats/:id", async (req, res) => {
-//   try {
+// удаление чата
+app.delete("/api/chats/:id", async (req, res) => {
+  try {
 
-//     const db = await readDB();
-//     const chatId = req.params.id;
-//     const userId = req.body.userId;
-//     const chat = db.chats.find((chat) => chat.id === chatId);
-//     const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
+    const db = await readDB();
+    const chatId = req.params.id;
+    const userId = req.body.userId;
+    const chat = db.chats.find((chat) => chat.id === chatId);
+    const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
 
-//     if (chatIndex === -1) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Chat not found",
-//       });
-//     }
-//     if (chat.users.length > 1) {
-//       db.chats[chatIndex].usersDeleted.push(userId);
-//       db.chats[chatIndex].users = db.chats[chatIndex].users.filter(user => user !== userId);
-//     } else {
-//       db.chats.splice(chatIndex, 1)[0];
-//     }
+    if (chatIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+    if (chat.users.length > 1) {
+      db.chats[chatIndex].usersDeleted.push(userId);
+      db.chats[chatIndex].users = db.chats[chatIndex].users.filter(user => user !== userId);
+    } else {
+      db.chats.splice(chatIndex, 1)[0];
+    }
 
-//     await writeDB(db);
+    await writeDB(db);
 
-//     return res.status(200).json({
-//       success: true,
-//       deletedChat: chat,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ 
-//       success: false, 
-//       message: "Server error while deleting chat" 
-//     });
-//   }
-// });
+    return res.status(200).json({
+      success: true,
+      deletedChat: chat,
+    });
+  } catch (error) {
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server error while deleting chat" 
+    });
+  }
+});
 
-// // Восстановление удаленного чата
-// app.patch("/api/chats/:id", async (req, res) => {
-//   try {
-//     const authHeader = req.headers.authorization;
-//     if (!authHeader) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Not authorized",
-//       });
-//     }
+// Восстановление удаленного чата
+app.patch("/api/chats/:id", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
 
-//     const token = authHeader.split(" ")[1];
-//     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-//     const db = await readDB();
-//     const chatId = req.params.id;
-//     const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
+    const db = await readDB();
+    const chatId = req.params.id;
+    const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
 
-//     if (chatIndex === -1) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Chat not found",
-//       });
-//     }
-//     const chat = db.chats[chatIndex];
-//     const userId = decoded.id;
-//     if (!chat.usersDeleted.includes(userId)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "User is not in deleted users list",
-//       });
-//     }
-//     chat.usersDeleted = chat.usersDeleted.filter(user => user !== userId);
-//     if (!chat.users.includes(userId)) {
-//       chat.users.push(userId);
-//     }
-//     await writeDB(db);
+    if (chatIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
+    const chat = db.chats[chatIndex];
+    const userId = decoded.id;
+    if (!chat.usersDeleted.includes(userId)) {
+      return res.status(400).json({
+        success: false,
+        message: "User is not in deleted users list",
+      });
+    }
+    chat.usersDeleted = chat.usersDeleted.filter(user => user !== userId);
+    if (!chat.users.includes(userId)) {
+      chat.users.push(userId);
+    }
+    await writeDB(db);
 
-//     return res.status(200).json({
-//       success: true,
-//       chat: db.chats[chatIndex],
-//     });
-//     } catch (error) {
-//       return res.status(500).json({ 
-//         success: false, 
-//         message: "Server error while restoring chat" 
-//       });
-//     }
-// })
+    return res.status(200).json({
+      success: true,
+      chat: db.chats[chatIndex],
+    });
+    } catch (error) {
+      return res.status(500).json({ 
+        success: false, 
+        message: "Server error while restoring chat" 
+      });
+    }
+})
 
-// // Создание чата private
-// app.post("/api/chat/private", async (req, res) => {
-//   try {
-//     const chat = req.body;
-//     const db = await readDB();
-//     if (chat.messages && chat.messages.length > 0) {
-//       chat.lastMessage = chat.messages[chat.messages.length - 1];
-//     } else {
-//       chat.lastMessage = null;
-//     }
-//     db.chats.push(chat);
-//     await writeDB(db);
+// Создание чата private
+app.post("/api/chat/private", async (req, res) => {
+  try {
+    const chat = req.body;
+    const db = await readDB();
+    if (chat.messages && chat.messages.length > 0) {
+      chat.lastMessage = chat.messages[chat.messages.length - 1];
+    } else {
+      chat.lastMessage = null;
+    }
+    db.chats.push(chat);
+    await writeDB(db);
 
-//     return res.status(200).json({
-//       success: true,
-//       chat: chat,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// });
+    return res.status(200).json({
+      success: true,
+      chat: chat,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
-// // Создание чата group
-// app.post("/api/chat/group", async (req, res) => {
-//   try {
-//     const authHeader = req.headers.authorization;
-//     if (!authHeader) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Not authorized",
-//       });
-//     }
+// Создание чата group
+app.post("/api/chat/group", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
 
-//     const token = authHeader.split(" ")[1];
-//     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-//     const chat = req.body;
-//     const db = await readDB();
-//     if (!chat.users.includes(decoded.id)) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "User must be included in the group",
-//       });
-//     }
-//     db.chats.push(chat);
-//     await writeDB(db);
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const chat = req.body;
+    const db = await readDB();
+    if (!chat.users.includes(decoded.id)) {
+      return res.status(400).json({
+        success: false,
+        message: "User must be included in the group",
+      });
+    }
+    db.chats.push(chat);
+    await writeDB(db);
 
-//     return res.status(200).json({
-//       success: true,
-//       chat: chat,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "Server error" });
-//   }
-// });
+    return res.status(200).json({
+      success: true,
+      chat: chat,
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
 
-// // Редактирование чата
-// app.patch("/api/chats/group/edit/:id", async (req, res) => {
-//   try {
-//     const authHeader = req.headers.authorization;
-//     if (!authHeader) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Not authorized",
-//       });
-//     }
+// Редактирование чата
+app.patch("/api/chats/group/edit/:id", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
 
-//     const token = authHeader.split(" ")[1];
-//     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-//     const userId = decoded.id;
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const userId = decoded.id;
 
-//     const { id } = req.params;
-//     const { name, avatar } = req.body;
-//     const db = await readDB();
-//     const chatIndex = db.chats.findIndex(chat => chat.id === id);
+    const { id } = req.params;
+    const { name, avatar } = req.body;
+    const db = await readDB();
+    const chatIndex = db.chats.findIndex(chat => chat.id === id);
 
-//     if (chatIndex === -1) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Chat not found",
-//       });
-//     }
+    if (chatIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
 
-//     const chat = db.chats[chatIndex];
+    const chat = db.chats[chatIndex];
 
-//     if (chat.type !== "group") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Only group chats can be edited",
-//       });
-//     }
+    if (chat.type !== "group") {
+      return res.status(400).json({
+        success: false,
+        message: "Only group chats can be edited",
+      });
+    }
 
-//     if (chat.createdBy !== userId) {
-//       return res.status(403).json({
-//         success: false,
-//         message: "Only chat creator can edit the group",
-//       });
-//     }
+    if (chat.createdBy !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Only chat creator can edit the group",
+      });
+    }
 
-//     if (name !== undefined) {
-//       db.chats[chatIndex].name = name;
-//     }
+    if (name !== undefined) {
+      db.chats[chatIndex].name = name;
+    }
 
-//     if (avatar !== undefined) {
-//       db.chats[chatIndex].avatar = avatar;
-//     }
+    if (avatar !== undefined) {
+      db.chats[chatIndex].avatar = avatar;
+    }
 
-//     await writeDB(db);
+    await writeDB(db);
 
-//     return res.status(200).json({
-//       success: true,
-//       chat: db.chats[chatIndex],
-//     });
-//   } catch (error) {
-//     console.error("Error updating chat:", error);
-//     return res.status(500).json({ 
-//       success: false, 
-//       message: "Server error while updating chat" 
-//     });
-//   }
-// });
+    return res.status(200).json({
+      success: true,
+      chat: db.chats[chatIndex],
+    });
+  } catch (error) {
+    console.error("Error updating chat:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server error while updating chat" 
+    });
+  }
+});
 
-// // Добавление пользователя в чат
-// app.patch("/api/chats/group/addUser/:id", async (req, res) => {
-//   try {
-//     const authHeader = req.headers.authorization;
-//     if (!authHeader) {
-//       return res.status(401).json({
-//         success: false,
-//         message: "Not authorized",
-//       });
-//     }
+// Добавление пользователя в чат
+app.patch("/api/chats/group/addUser/:id", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
 
-//     const token = authHeader.split(" ")[1];
-//     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-//     const userId = decoded.id;
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+    const userId = decoded.id;
 
-//     const { id } = req.params;
-//     const { user } = req.body;
+    const { id } = req.params;
+    const { user } = req.body;
     
-//     const db = await readDB();
-//     const chatIndex = db.chats.findIndex(chat => chat.id === id);
+    const db = await readDB();
+    const chatIndex = db.chats.findIndex(chat => chat.id === id);
 
-//     if (chatIndex === -1) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "Chat not found",
-//       });
-//     }
+    if (chatIndex === -1) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found",
+      });
+    }
 
-//     const chat = db.chats[chatIndex];
+    const chat = db.chats[chatIndex];
 
-//     if (chat.type !== "group") {
-//       return res.status(400).json({
-//         success: false,
-//         message: "Only group chats can add users",
-//       });
-//     }
+    if (chat.type !== "group") {
+      return res.status(400).json({
+        success: false,
+        message: "Only group chats can add users",
+      });
+    }
 
-//     if (chat.createdBy !== userId) {
-//       return res.status(403).json({
-//         success: false,
-//         message: "Only chat creator can add users to the group",
-//       });
-//     }
+    if (chat.createdBy !== userId) {
+      return res.status(403).json({
+        success: false,
+        message: "Only chat creator can add users to the group",
+      });
+    }
 
-//     const userExists = db.users.some(u => u.id === user);
-//     if (!userExists) {
-//       return res.status(404).json({
-//         success: false,
-//         message: "User not found",
-//       });
-//     }
+    const userExists = db.users.some(u => u.id === user);
+    if (!userExists) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
 
-//     if (!chat.users.includes(user)) {
-//       chat.users.push(user);
-//       await writeDB(db);
+    if (!chat.users.includes(user)) {
+      chat.users.push(user);
+      await writeDB(db);
       
-//       return res.status(200).json({
-//         success: true,
-//         chat: db.chats[chatIndex],
-//         message: "User added successfully"
-//       });
-//     } else {
-//       return res.status(400).json({
-//         success: false,
-//         message: "User already in the group",
-//       });
-//     }
+      return res.status(200).json({
+        success: true,
+        chat: db.chats[chatIndex],
+        message: "User added successfully"
+      });
+    } else {
+      return res.status(400).json({
+        success: false,
+        message: "User already in the group",
+      });
+    }
     
-//   } catch (error) {
-//     console.error("Error adding user to chat:", error);
-//     return res.status(500).json({ 
-//       success: false, 
-//       message: "Server error while adding user to chat" 
-//     });
-//   }
-// });
+  } catch (error) {
+    console.error("Error adding user to chat:", error);
+    return res.status(500).json({ 
+      success: false, 
+      message: "Server error while adding user to chat" 
+    });
+  }
+});
 
+// Serve static files from dist directory
 app.use(express.static(path.join(__dirname, "dist")));
+
+// Catch-all handler: use * for Express 4
 app.get("*", (req, res) => {
   res.sendFile(path.join(__dirname, "dist", "index.html"));
 });
