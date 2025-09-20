@@ -22,9 +22,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const DB_PATH = path.join(__dirname, "db.json");
 
-// Middleware
-app.use(cors());
-app.use(express.json());
+// // Middleware
+// app.use(cors());
+// app.use(express.json());
 
 // Создаем HTTP сервер и WebSocket
 const httpServer = createServer(app);
@@ -483,7 +483,7 @@ app.get("/api/chat/:id", async (req, res) => {
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-    
+
     const db = await readDB();
     const chat = db.chats.find((chat) => chat.id === req.params.id);
 
