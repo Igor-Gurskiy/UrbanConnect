@@ -23,7 +23,14 @@ const PORT = process.env.PORT || 3001;
 const DB_PATH = path.join(__dirname, "db.json");
 
 // Middleware
-app.use(cors());
+// app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:5173', // разработка
+    'https://urbanconnect.onrender.com' // продакшен 
+  ],
+  credentials: true
+}));
 app.use(express.json());
 
 // Создаем HTTP сервер и WebSocket
@@ -474,12 +481,12 @@ app.get("/api/chat/:id", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
 
-    if (!authHeader) {
-      return res.status(401).json({
-        success: false,
-        message: "Not authorized",
-      });
-    }
+    // if (!authHeader) {
+    //   return res.status(401).json({
+    //     success: false,
+    //     message: "Not authorized",
+    //   });
+    // }
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);

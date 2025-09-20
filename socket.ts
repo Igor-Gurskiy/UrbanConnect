@@ -27,9 +27,10 @@ class WebSocketService {
       
       // Подключаемся для пользователя, а не конкретного чата
       // this.ws = new WebSocket(`ws://localhost:3001?userId=${userId}`);
-      const wsUrl = window.location.protocol === 'https:' 
-  ? `wss://${window.location.host}` 
-  : `ws://${window.location.host}`;
+      const wsUrl = import.meta.env.VITE_WS_URL || 
+  (window.location.protocol === 'https:' 
+    ? `wss://${window.location.host}` 
+    : `ws://${window.location.host}`);
 this.ws = new WebSocket(`${wsUrl}?userId=${userId}`);
 
       this.ws.onopen = () => {
