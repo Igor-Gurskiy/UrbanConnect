@@ -22,9 +22,9 @@ const app = express();
 const PORT = process.env.PORT || 3001;
 const DB_PATH = path.join(__dirname, "db.json");
 
-// // Middleware
-// app.use(cors());
-// app.use(express.json());
+// Middleware
+app.use(cors());
+app.use(express.json());
 
 // Создаем HTTP сервер и WebSocket
 const httpServer = createServer(app);
