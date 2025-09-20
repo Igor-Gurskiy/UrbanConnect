@@ -1,7 +1,7 @@
 import { setCookie, getCookie } from './cookies';
 import type { TChat, TMessage, TUser } from './types';
 
-const URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:3001';
+const URL = import.meta.env.VITE_API_BASE_URL || 'https://urbanconnect.onrender.com';
 
 const checkResponse = <T>(res: Response): Promise<T> =>
 	res.ok ? res.json() : res.json().then((err) => Promise.reject(err));
