@@ -13,8 +13,6 @@ type Story = StoryObj<typeof ChatList>;
 
 export const WithChats: Story = {
 	args: {
-		chats: [
-			
-		],
+		chats: [],
 	},
 };

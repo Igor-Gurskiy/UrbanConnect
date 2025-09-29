@@ -43,7 +43,10 @@ export const createGroupChat = createAsyncThunk(
 
 export const getChatById = createAsyncThunk(
 	'chat/getChatById',
-	async (id: string) => await getChatByIdApi(id)
+	async (id: string) => {
+		const response = await getChatByIdApi(id);
+		return response;
+	}
 );
 
 export const deleteChatById = createAsyncThunk(
@@ -109,11 +112,22 @@ export const ChatSlice = createSlice({
 		clearError: (state) => {
 			state.error = '';
 		},
+		setOpenChat: (state, action) => {
+			state.openChat = action.payload;
+		},
+		clearOpenChat: (state) => {
+			state.openChat = null;
+		},
 	},
 	selectors: {
 		selectChats: (state) => state.chats,
+		selectOpenChat: (state) => state.openChat,
 		selectChatIsLoading: (state) => state.loading,
 		selectError: (state) => state.error,
+		selectChatById: (state, chatId: string) => {
+			return state.chats.find((chat) => chat.id === chatId) || null;
+		},
+		selectIsLoading: (state) => state.loading,
 	},
 	extraReducers(builder) {
 		builder
@@ -160,12 +174,7 @@ export const ChatSlice = createSlice({
 				state.loading = false;
 				state.error = '';
 				const openChat = action.payload.chat;
-				const index = state.chats.findIndex((chat) => chat.id === openChat.id);
-				if (index !== -1) {
-					state.chats[index] = openChat;
-				} else {
-					state.chats.push(openChat);
-				}
+				state.openChat = openChat;
 			})
 			.addCase(getChatById.rejected, (state, action) => {
 				state.error = action.error.message || '';
@@ -178,13 +187,8 @@ export const ChatSlice = createSlice({
 			.addCase(deleteChatById.fulfilled, (state, action) => {
 				state.loading = false;
 				state.error = '';
-				const deletedChat = action.payload;
-				const index = state.chats.findIndex(
-					(chat) => chat.id === deletedChat.id
-				);
-				if (index !== -1) {
-					state.chats[index] = deletedChat;
-				}
+				const deletedChat = action.payload.id;
+				state.chats = state.chats.filter((chat) => chat.id !== deletedChat);
 			})
 			.addCase(deleteChatById.rejected, (state, action) => {
 				state.error = action.error.message || '';
@@ -255,7 +259,6 @@ export const ChatSlice = createSlice({
 				state.loading = false;
 			})
 			.addCase(addUserToGroupChat.rejected, (state, action) => {
-				// Получаем ошибку из payload
 				const errorData = action.payload as any;
 				state.error = errorData?.message || 'Failed to add user to group';
 				state.loading = false;
@@ -267,7 +270,13 @@ export const ChatSlice = createSlice({
 	},
 });
 
-export const { selectChats, selectChatIsLoading, selectError } =
-	ChatSlice.selectors;
-export const { clearError } = ChatSlice.actions;
+export const {
+	selectChats,
+	selectChatIsLoading,
+	selectError,
+	selectOpenChat,
+	selectChatById,
+	selectIsLoading,
+} = ChatSlice.selectors;
+export const { clearError, setOpenChat, clearOpenChat } = ChatSlice.actions;
 export default ChatSlice.reducer;

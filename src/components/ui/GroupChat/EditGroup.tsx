@@ -1,8 +1,7 @@
-import { Alert, Button, Form, Input, Modal } from 'antd';
+import { Alert, Button, Form, Input } from 'antd';
 import { memo } from 'react';
 
-interface ModalEditGroupUIProps {
-	open: boolean;
+interface EditGroupUIProps {
 	onClose: () => void;
 	onSubmit: (values: { name: string; avatar: string }) => void;
 	initialValues?: {
@@ -13,8 +12,8 @@ interface ModalEditGroupUIProps {
 	loading?: boolean;
 }
 
-export const ModalEditGroupUI: React.FC<ModalEditGroupUIProps> = memo(
-	({ open, onClose, onSubmit, initialValues, error, loading = false }) => {
+export const EditGroupUI: React.FC<EditGroupUIProps> = memo(
+	({ onClose, onSubmit, initialValues, error, loading = false }) => {
 		const [form] = Form.useForm();
 
 		const handleSubmit = (values: { name: string; avatar: string }) => {
@@ -28,12 +27,7 @@ export const ModalEditGroupUI: React.FC<ModalEditGroupUIProps> = memo(
 		};
 
 		return (
-			<Modal
-				open={open}
-				onCancel={handleCancel}
-				title="Edit Group Chat"
-				footer={null}
-			>
+			<div>
 				{error && <Alert description={error} type="error" />}
 				<Form
 					form={form}
@@ -60,12 +54,11 @@ export const ModalEditGroupUI: React.FC<ModalEditGroupUIProps> = memo(
 						</Button>
 					</div>
 				</Form>
-			</Modal>
+			</div>
 		);
 	},
 	(prevProps, nextProps) => {
 		return (
-			prevProps.open === nextProps.open &&
 			prevProps.loading === nextProps.loading &&
 			prevProps.initialValues === nextProps.initialValues
 		);

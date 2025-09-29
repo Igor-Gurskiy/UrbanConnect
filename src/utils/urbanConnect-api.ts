@@ -2,7 +2,7 @@ import { setCookie, getCookie } from './cookies';
 import type { TChat, TMessage, TUser } from './types';
 
 // const URL = import.meta.env.VITE_API_BASE_URL || 'https://urbanconnect.onrender.com';
-const URL = import.meta.env.VITE_API_BASE_URL
+const URL = import.meta.env.VITE_API_BASE_URL;
 
 const checkResponse = <T>(res: Response): Promise<T> =>
 	res.ok ? res.json() : res.json().then((err) => Promise.reject(err));
@@ -70,15 +70,37 @@ export type TRegisterData = {
 
 export type TUserResponse = TServerResponse<{ user: TUser }>;
 
-// export const updateUserApi = (user: Partial<TRegisterData>) =>
-//   fetchWithRefresh<TUserResponse>(`${URL}/auth/user`, {
-//     method: "PATCH",
-//     headers: {
-//       "Content-Type": "application/json;charset=utf-8",
-//       authorization: getCookie("accessToken"),
-//     } as HeadersInit,
-//     body: JSON.stringify(user),
-//   });
+export const updateUserApi = (user: { name?: string; avatar?: string }) =>
+	fetchWithRefresh<TUserResponse>(`${URL}/api/user`, {
+		method: 'PATCH',
+		headers: {
+			'Content-Type': 'application/json;charset=utf-8',
+			authorization: getCookie('accessToken'),
+		} as HeadersInit,
+		body: JSON.stringify(user),
+	}).then((data) => {
+		if (data?.success) return data;
+		return Promise.reject(data);
+	});
+
+export const updateUserPasswordApi = (passwordData: {
+	oldPassword: string;
+	newPassword: string;
+}) =>
+	fetchWithRefresh<TServerResponse<{ message: string }>>(
+		`${URL}/api/user/password`,
+		{
+			method: 'PATCH',
+			headers: {
+				'Content-Type': 'application/json;charset=utf-8',
+				authorization: getCookie('accessToken'),
+			} as HeadersInit,
+			body: JSON.stringify(passwordData),
+		}
+	).then((data) => {
+		if (data?.success) return data;
+		return Promise.reject(data);
+	});
 
 export const getUserApi = () =>
 	fetchWithRefresh<TUserResponse>(`${URL}/api/user`, {
@@ -197,13 +219,15 @@ type TChatResponse = TServerResponse<{
 }>;
 
 export const getChatByIdApi = (id: string) =>
-	fetch(`${URL}/api/chat/${id}`, {
+	fetchWithRefresh<TChatResponse>(`${URL}/api/chat/${id}`, {
 		method: 'GET',
 		headers: {
 			'Content-Type': 'application/json',
-		},
-	}).then((res) => {
-		return checkResponse<TChatResponse>(res);
+			authorization: getCookie('accessToken'),
+		} as HeadersInit,
+	}).then((data) => {
+		if (data?.success) return data;
+		return Promise.reject(data);
 	});
 
 type TNewMessageResponse = TServerResponse<{
@@ -268,7 +292,7 @@ export const deleteChatByIdApi = (chatId: string, userAuth: string) =>
 			'Content-Type': 'application/json;charset=utf-8',
 			authorization: getCookie('accessToken'),
 		} as HeadersInit,
-		body: JSON.stringify({ userAuth }),
+		body: JSON.stringify({ userId: userAuth }),
 	}).then((data) => {
 		if (data?.success) return data.deletedChat;
 		return Promise.reject(data);
@@ -291,12 +315,12 @@ type TUpdateChatResponse = TServerResponse<{
 	message?: string;
 }>;
 
-export const updateGroupChatApi = (data: {
+export const updateGroupChatApi = async (data: {
 	id: string;
 	name?: string;
 	avatar?: string;
 }) => {
-	return fetchWithRefresh<TUpdateChatResponse>(
+	const response = await fetchWithRefresh<TUpdateChatResponse>(
 		`${URL}/api/chats/group/edit/${data.id}`,
 		{
 			method: 'PATCH',
@@ -309,17 +333,19 @@ export const updateGroupChatApi = (data: {
 				avatar: data.avatar,
 			}),
 		}
-	).then((response) => {
-		if (response?.success) {
-			return response;
-		} else {
-			return Promise.reject(response);
-		}
-	});
+	);
+	if (response?.success) {
+		return response;
+	} else {
+		return Promise.reject(response);
+	}
 };
 
-export const addUserToGroupChatApi = (data: { id: string; user: string }) => {
-	return fetchWithRefresh<TUpdateChatResponse>(
+export const addUserToGroupChatApi = async (data: {
+	id: string;
+	user: string;
+}) => {
+	const response = await fetchWithRefresh<TUpdateChatResponse>(
 		`${URL}/api/chats/group/addUser/${data.id}`,
 		{
 			method: 'PATCH',
@@ -331,11 +357,10 @@ export const addUserToGroupChatApi = (data: { id: string; user: string }) => {
 				user: data.user,
 			}),
 		}
-	).then((response) => {
-		if (response?.success) {
-			return response;
-		} else {
-			return Promise.reject(response);
-		}
-	});
+	);
+	if (response?.success) {
+		return response;
+	} else {
+		return Promise.reject(response);
+	}
 };

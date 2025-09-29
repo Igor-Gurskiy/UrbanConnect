@@ -1,15 +1,26 @@
-import { type FC, memo } from 'react';
-import { LogModal } from '../ui/Modal/LogModal';
-import { useNavigate } from 'react-router-dom';
+import { type FC, memo, useEffect } from 'react';
+import { ModalUI } from '../ui/Modal/Modal';
 import type { TModal } from './types';
+import ReactDOM from 'react-dom';
 
-export const Modal: FC<TModal> = memo(({ type, children }) => {
-	const navigate = useNavigate();
-	const handleCancel = () => navigate(-1);
+const modalRoot = document.getElementById('modals');
 
-	return (
-		<LogModal title={type} handleCancel={handleCancel} open={true}>
+export const Modal: FC<TModal> = memo(({ type, handleCancel, children }) => {
+	useEffect(() => {
+		const handleEsc = (e: KeyboardEvent) => {
+			e.key === 'Escape' && handleCancel();
+		};
+
+		document.addEventListener('keydown', handleEsc);
+		return () => {
+			document.removeEventListener('keydown', handleEsc);
+		};
+	}, [handleCancel]);
+
+	return ReactDOM.createPortal(
+		<ModalUI title={type} handleCancel={handleCancel}>
 			{children}
-		</LogModal>
+		</ModalUI>,
+		modalRoot as HTMLDivElement
 	);
 });

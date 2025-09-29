@@ -1,16 +1,15 @@
-import { Alert, Button, Form, Input, Modal } from 'antd';
+import { Alert, Button, Form, Input } from 'antd';
 import { memo } from 'react';
 
-interface ModalAddMember {
-	open: boolean;
+interface AddMember {
 	onClose: () => void;
 	onSubmit: (values: { user: string }) => void;
 	loading?: boolean;
 	error?: string;
 }
 
-export const ModalAddMemberUI: React.FC<ModalAddMember> = memo(
-	({ open, onClose, onSubmit, loading = false, error }) => {
+export const AddMemberUI: React.FC<AddMember> = memo(
+	({ onClose, onSubmit, loading = false, error }) => {
 		const [form] = Form.useForm();
 
 		const handleSubmit = (values: { id: string }) => {
@@ -24,12 +23,7 @@ export const ModalAddMemberUI: React.FC<ModalAddMember> = memo(
 		};
 
 		return (
-			<Modal
-				open={open}
-				onCancel={handleCancel}
-				title="Edit Group Chat"
-				footer={null}
-			>
+			<div>
 				{error && <Alert description={error} type="error" />}
 				<Form form={form} onFinish={handleSubmit} layout="vertical">
 					<Form.Item
@@ -47,12 +41,11 @@ export const ModalAddMemberUI: React.FC<ModalAddMember> = memo(
 						</Button>
 					</div>
 				</Form>
-			</Modal>
+			</div>
 		);
 	},
 	(prevProps, nextProps) => {
 		return (
-			prevProps.open === nextProps.open &&
 			prevProps.loading === nextProps.loading &&
 			prevProps.error === nextProps.error
 		);

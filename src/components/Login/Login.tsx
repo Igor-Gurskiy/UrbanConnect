@@ -8,7 +8,7 @@ import {
 	clearError,
 } from '../../services/slices/Profile/Profile';
 import { useSelector } from '../../services/store';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export const Login: FC = () => {
 	const [email, setEmail] = useState('');
@@ -16,6 +16,7 @@ export const Login: FC = () => {
 	const [remember, setRemember] = useState(false);
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
+	const location = useLocation();
 	const error = useSelector(selectError);
 	useEffect(() => {
 		dispatch(clearError());
@@ -26,7 +27,14 @@ export const Login: FC = () => {
 	const handleSubmit = async () => {
 		dispatch(clearError());
 		await dispatch(loginUser({ email, password, remember })).unwrap();
-		navigate('/');
+		// navigate('/');
+		const background = (location.state as { background?: Location })
+			?.background;
+		if (background) {
+			navigate(-1); // закрываем модалку
+		} else {
+			navigate('/'); // или переходим на главную
+		}
 	};
 
 	return (

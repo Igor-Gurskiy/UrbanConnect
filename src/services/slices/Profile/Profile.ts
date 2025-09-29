@@ -7,6 +7,8 @@ import {
 	logoutUserApi,
 	loginUserApi,
 	registerUserApi,
+	updateUserApi,
+	updateUserPasswordApi,
 	type TRegisterData,
 	type TLoginData,
 } from '../../../utils/urbanConnect-api';
@@ -37,6 +39,7 @@ export const registerUser = createAsyncThunk(
 			return data.user;
 		})
 );
+
 export const loginUser = createAsyncThunk(
 	'profile/loginUser',
 	async (data: TLoginData) =>
@@ -72,6 +75,17 @@ export const getUserById = createAsyncThunk(
 );
 
 export const getUsers = createAsyncThunk('profile/getUsers', getUsersApi);
+
+export const updateUser = createAsyncThunk(
+	'profile/updateUser',
+	async (data: { name?: string; avatar?: string }) => await updateUserApi(data)
+);
+
+export const updatePassword = createAsyncThunk(
+	'profile/updatePassword',
+	async (passwordData: { oldPassword: string; newPassword: string }) =>
+		await updateUserPasswordApi(passwordData)
+);
 
 export const ProfileSlice = createSlice({
 	name: 'profile',
@@ -144,6 +158,24 @@ export const ProfileSlice = createSlice({
 				state.error = action.error.message || null;
 			})
 			.addCase(getUsers.pending, (state) => {
+				state.error = null;
+			})
+			.addCase(updateUser.fulfilled, (state, action) => {
+				state.user = action.payload.user;
+			})
+			.addCase(updateUser.rejected, (state, action) => {
+				state.error = action.error.message || null;
+			})
+			.addCase(updateUser.pending, (state) => {
+				state.error = null;
+			})
+			.addCase(updatePassword.fulfilled, (state) => {
+				state.error = null;
+			})
+			.addCase(updatePassword.rejected, (state, action) => {
+				state.error = action.error.message || 'Ошибка при смене пароля';
+			})
+			.addCase(updatePassword.pending, (state) => {
 				state.error = null;
 			});
 	},

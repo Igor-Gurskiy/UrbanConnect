@@ -13,7 +13,7 @@ export const MessageItemUI = memo(({ item, isCurrentUser }: TMessageItem) => {
 			className={`d-flex ${isCurrentUser ? 'justify-content-end' : 'justify-content-start'} p-2`}
 		>
 			<div
-				className={`d-flex gap-2 w-50 p-2 justify-content-between align-items-center`}
+				className={`d-flex gap-2 w-75 p-2 justify-content-between align-items-center`}
 				style={{
 					borderRadius: isCurrentUser ? '18px 18px 0 18px' : '18px 18px 18px 0',
 					backgroundColor: isCurrentUser ? '#1890ff' : '#e6e6e6',

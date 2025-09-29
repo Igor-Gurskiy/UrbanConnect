@@ -98,14 +98,6 @@ wss.on("connection", (ws, req) => {
   });
 });
 
-// // Функция для отправки сообщения через WebSocket
-// function sendMessage(userId, message) {
-//   const ws = connectedUsers.get(userId);
-//   if (ws && ws.readyState === 1) {
-//     ws.send(JSON.stringify(message));
-//   }
-// }
-
 // Функция для broadcast сообщения всем в чате
 function broadcastMessage(message) {
   wss.clients.forEach((client) => {
@@ -115,6 +107,7 @@ function broadcastMessage(message) {
     }
   });
 }
+
 // Регистрация
 app.post("/api/register", async (req, res) => {
   try {
@@ -231,13 +224,13 @@ app.get("/api/user", async (req, res) => {
         message: "User not found",
       });
     }
-
     return res.status(200).json({
       success: true,
       user: {
         email: user.email,
         name: user.name,
         id: user.id,
+        avatar: user.avatar || '',
       },
     });
   } catch (error) {
@@ -269,7 +262,6 @@ app.get("/api/users", async (req, res) => {
 
     const { search  } = req.query;
     const db = await readDB();
-    console.log("Search ID:", search);
     if (!search ) {
       const users = db.users
         .filter(user => user.id !== decoded.id)
@@ -297,7 +289,6 @@ app.get("/api/users", async (req, res) => {
       email: user.email,
       name: user.name,
     }));
-    console.log("Found users:", users.length);
     return res.status(200).json({
       success: true,
       users: users,
@@ -375,6 +366,107 @@ app.post("/api/logout", (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Logged out successfully",
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// редактирование профиля
+app.patch("/api/user", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+
+    const db = await readDB();
+    const user = db.users.find((user) => user.id === decoded.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (req.body.name !== undefined) {
+      user.name = req.body.name;
+    }
+    
+    if (req.body.avatar !== undefined) {
+      user.avatar = req.body.avatar;
+    }
+
+    await writeDB(db);
+
+    return res.status(200).json({
+      success: true,
+      message: "User updated successfully",
+      user: {
+        email: user.email,
+        name: user.name,
+        id: user.id,
+        avatar: user.avatar || '',
+      },
+    });
+  } catch (error) {
+    return res.status(500).json({ success: false, message: "Server error" });
+  }
+});
+
+// смена пароля
+app.patch("/api/user/password", async (req, res) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    const token = authHeader.split(" ")[1];
+    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
+
+    const db = await readDB();
+    const user = db.users.find((user) => user.id === decoded.id);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Заполните все поля",
+      });
+    }
+
+    if (user.password !== oldPassword) {
+      return res.status(400).json({
+        success: false,
+        message: "Старый пароль неверен",
+      });
+    }
+
+    user.password = newPassword;
+    await writeDB(db);
+
+    return res.status(200).json({
+      success: true,
+      message: "Password updated successfully",
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });
@@ -468,7 +560,6 @@ app.get("/api/chats", async (req, res) => {
       });
     }
 
-    console.error("Chats error:", error);
     return res.status(500).json({
       success: false,
       message: "Server error",
@@ -481,12 +572,12 @@ app.get("/api/chat/:id", async (req, res) => {
   try {
     const authHeader = req.headers.authorization;
 
-    // if (!authHeader) {
-    //   return res.status(401).json({
-    //     success: false,
-    //     message: "Not authorized",
-    //   });
-    // }
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
@@ -570,7 +661,7 @@ app.delete("/api/chats/:id", async (req, res) => {
 
     const db = await readDB();
     const chatId = req.params.id;
-    const userId = req.body.userId;
+    const { userId } = req.body;
     const chat = db.chats.find((chat) => chat.id === chatId);
     const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
 
@@ -764,7 +855,6 @@ app.patch("/api/chats/group/edit/:id", async (req, res) => {
       chat: db.chats[chatIndex],
     });
   } catch (error) {
-    console.error("Error updating chat:", error);
     return res.status(500).json({ 
       success: false, 
       message: "Server error while updating chat" 
@@ -841,7 +931,6 @@ app.patch("/api/chats/group/addUser/:id", async (req, res) => {
     }
     
   } catch (error) {
-    console.error("Error adding user to chat:", error);
     return res.status(500).json({ 
       success: false, 
       message: "Server error while adding user to chat" 

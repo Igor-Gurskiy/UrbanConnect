@@ -4,25 +4,31 @@ class WebSocketService {
   reconnectedAttempts: number;
   maxReconnectedAttempts: number;
   reconnectInterval: number;
-  currentChatId: null | string;
+  // currentChatId: null | string;
   currentUserId: null | string;
+
   constructor() {
     this.ws = null;
     this.isConnected = false;
     this.reconnectedAttempts = 0;
     this.maxReconnectedAttempts = 5;
     this.reconnectInterval = 5000;
-    this.currentChatId = null;
+    // this.currentChatId = null;
     this.currentUserId = null;
-  }
 
-  connect(chatId: string, userId: string) {
-     if (this.ws && this.isConnected && this.currentUserId === userId) {
+    this.handleMessage = this.handleMessage.bind(this);
+  }
+  
+  connect(userId: string) {
+    //  if (this.ws && this.isConnected && this.currentUserId === userId) {
+    //   return this.ws;
+    // }
+    if (this.ws && this.ws.readyState === WebSocket.OPEN && this.currentUserId === userId) {
       return this.ws;
     }
-
+    this.disconnect();
     try {
-      this.currentChatId = chatId;
+      // this.currentChatId = chatId;
       this.currentUserId = userId;
       
       // Подключаемся для пользователя, а не конкретного чата
@@ -39,32 +45,38 @@ this.ws = new WebSocket(`${wsUrl}?userId=${userId}`);
         console.log('WebSocket connection established');
       };
       
-      this.ws.onmessage = (event) => {
-        try {
-          const data = JSON.parse(event.data);
-          console.log('Received WebSocket message:', data);
-          
-          // Создаем кастомное событие
-          const customEvent = new CustomEvent('websocket-message', {
-            detail: data
-          });
-          window.dispatchEvent(customEvent);
-        } catch (error) {
-          console.log('Error parsing message:', error);
-        }
-      };
+      this.ws.onmessage = this.handleMessage;
 
+      // this.ws.onmessage = (event) => {
+      //   try {
+      //     const data = JSON.parse(event.data);
+      //     console.log('Received WebSocket message:', data);
+          
+      //     // Создаем кастомное событие
+      //     const customEvent = new CustomEvent('websocket-message', {
+      //       detail: data
+      //     });
+      //     window.dispatchEvent(customEvent);
+      //   } catch (error) {
+      //     console.log('Error parsing message:', error);
+      //   }
+      // };
       this.ws.onclose = () => {
         this.isConnected = false;
         console.log('WebSocket connection closed');
-        if (this.reconnectedAttempts < this.maxReconnectedAttempts) {
-          setTimeout(() => {
-            this.reconnectedAttempts++;
-            console.log(`Reconnecting in 5 seconds... Attempt ${this.reconnectedAttempts}/${this.maxReconnectedAttempts}`);
-            this.connect(chatId, userId);
-          }, this.reconnectInterval);
-        }
+        this.attemptReconnect(userId);
       };
+      // this.ws.onclose = () => {
+      //   this.isConnected = false;
+      //   console.log('WebSocket connection closed');
+      //   if (this.reconnectedAttempts < this.maxReconnectedAttempts) {
+      //     setTimeout(() => {
+      //       this.reconnectedAttempts++;
+      //       console.log(`Reconnecting in 5 seconds... Attempt ${this.reconnectedAttempts}/${this.maxReconnectedAttempts}`);
+      //       this.connect(chatId, userId);
+      //     }, this.reconnectInterval);
+      //   }
+      // };
 
       this.ws.onerror = (error) => {
         console.log('WebSocket error:', error);
@@ -77,14 +89,44 @@ this.ws = new WebSocket(`${wsUrl}?userId=${userId}`);
       return null;
     }
   }
+  private handleMessage(event: MessageEvent) {
+    try {
+      const data = JSON.parse(event.data);
+      console.log('Received WebSocket message:', data);
+      
+      // РЕШЕНИЕ: Добавить валидацию данных
+      if (!data || !data.type) {
+        console.warn('Invalid WebSocket message format');
+        return;
+      }
+      
+      const customEvent = new CustomEvent('websocket-message', {
+        detail: data
+      });
+      window.dispatchEvent(customEvent);
+    } catch (error) {
+      console.log('Error parsing message:', error);
+    }
+  }
 
+  private attemptReconnect(userId: string) {
+    if (this.reconnectedAttempts < this.maxReconnectedAttempts) {
+      setTimeout(() => {
+        this.reconnectedAttempts++;
+        console.log(`Reconnecting... Attempt ${this.reconnectedAttempts}/${this.maxReconnectedAttempts}`);
+        this.connect(userId);
+      }, this.reconnectInterval);
+    } else {
+      console.log('Max reconnection attempts reached');
+    }
+  }
   disconnect() {
     if (this.ws) {
       this.ws.onclose = null;
       this.ws.close();
       this.ws = null;
       this.isConnected = false;
-      this.currentChatId = null;
+      // this.currentChatId = null;
       this.currentUserId = null;
     }
   }

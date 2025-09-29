@@ -1,5 +1,4 @@
-import type { FC } from 'react';
-import { memo, useCallback, useMemo } from 'react';
+import { memo, useCallback, useMemo, type FC } from 'react';
 import { useSelector, useDispatch } from '../../services/store';
 import { selectUser } from '../../services/slices/Profile/Profile';
 import {
@@ -12,16 +11,28 @@ import type { TChat, TMessage } from '../../utils/types';
 import { ChatHeaderUI } from '../ui/Chat/ChatHeader';
 import { ChatBodyUI } from '../ui/Chat/ChatBody';
 import { ChatFormUI } from '../ui/Chat/ChatForm';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 interface IChatDialog {
 	chat: TChat | null;
-	onChatCreated: (chat: TChat) => void;
+	onChatCreated?: (chat: TChat) => void;
 }
 
 export const ChatDialog: FC<IChatDialog> = memo(
 	({ chat, onChatCreated }) => {
+		const navigate = useNavigate();
+		const { id } = useParams();
 		const user = useSelector(selectUser);
+		const location = useLocation();
+
 		const dispatch = useDispatch();
+		const handleEditGroup = () => {
+			navigate(`/chat/${id}/edit-group`, { state: { background: location } });
+		};
+
+		const handleAddMember = () => {
+			navigate(`/chat/${id}/add-member`, { state: { background: location } });
+		};
 
 		const handleSend = useCallback(
 			async (messageText: string) => {
@@ -34,17 +45,21 @@ export const ChatDialog: FC<IChatDialog> = memo(
 					user: user.id,
 				};
 
-				if (chat.id.startsWith('temp-')) {
-					const newChat = {
-						...chat,
-						id: uuidv4(),
-						messages: [message],
-						lastMessage: message,
-						usersDeleted: [],
-					};
-
-					await dispatch(createChatPrivate(newChat));
-					onChatCreated(newChat);
+				if (chat.messages.length === 0) {
+					await dispatch(
+						createChatPrivate({
+							...chat,
+							messages: [message],
+							lastMessage: message,
+						})
+					);
+					if (onChatCreated) {
+						onChatCreated({
+							...chat,
+							messages: [message],
+							lastMessage: message,
+						});
+					}
 				} else {
 					if (chat.usersDeleted.includes(user.id)) {
 						await dispatch(returnUser(chat.id));
@@ -52,7 +67,7 @@ export const ChatDialog: FC<IChatDialog> = memo(
 					dispatch(createMessage({ chatId: chat.id, message }));
 				}
 			},
-			[user?.id, chat?.id, dispatch, onChatCreated]
+			[user, chat, dispatch, onChatCreated]
 		);
 
 		const handleSmileClick = useCallback(() => {
@@ -62,7 +77,7 @@ export const ChatDialog: FC<IChatDialog> = memo(
 		const handleFileAttach = useCallback(() => {
 			alert('File attach clicked');
 		}, []);
-
+		const isGroupAdmin = chat?.type === 'group' && chat?.createdBy === user?.id;
 		const chatHeader = useMemo(
 			() => (
 				<ChatHeaderUI
@@ -70,9 +85,12 @@ export const ChatDialog: FC<IChatDialog> = memo(
 					avatar={chat?.avatar}
 					isOnline={false}
 					type={chat?.type || ''}
+					isAdmin={isGroupAdmin}
+					onEditGroup={isGroupAdmin ? handleEditGroup : undefined}
+					onAddMember={isGroupAdmin ? handleAddMember : undefined}
 				/>
 			),
-			[chat?.name, chat?.avatar, chat?.type]
+			[chat]
 		);
 
 		const chatBody = useMemo(
@@ -92,18 +110,20 @@ export const ChatDialog: FC<IChatDialog> = memo(
 		);
 
 		return (
-			<div
-				style={{
-					display: 'flex',
-					flexDirection: 'column',
-					padding: '16px',
-					height: '80vh',
-				}}
-			>
-				{chatHeader}
-				{chatBody}
-				{chatForm}
-			</div>
+			<>
+				<div
+					style={{
+						display: 'grid',
+						gridTemplateRows: 'min-content 1fr min-content',
+					}}
+				>
+					{chatHeader}
+
+					{chatBody}
+
+					{chatForm}
+				</div>
+			</>
 		);
 	},
 	(prevProps, nextProps) => {
@@ -111,8 +131,7 @@ export const ChatDialog: FC<IChatDialog> = memo(
 			prevProps.chat?.id === nextProps.chat?.id &&
 			prevProps.chat?.name === nextProps.chat?.name &&
 			prevProps.chat?.avatar === nextProps.chat?.avatar &&
-			prevProps.chat?.messages?.length === nextProps.chat?.messages?.length &&
-			prevProps.onChatCreated === nextProps.onChatCreated
+			prevProps.chat?.messages?.length === nextProps.chat?.messages?.length
 		);
 	}
 );

@@ -1,0 +1,59 @@
+@mixin generate-width-utilities(
+	$sizes: (
+		100,
+		200,
+		300,
+		400,
+		500,
+		600,
+		700,
+		800,
+		900,
+	)
+) {
+	@each $size in $sizes {
+		// Max-width
+		.mw-px-#{$size} {
+			max-width: #{$size}px !important;
+		}
+
+		// Min-width
+		.min-w-px-#{$size} {
+			min-width: #{$size}px !important;
+		}
+
+		// Fixed width
+		.w-px-#{$size} {
+			width: #{$size}px !important;
+		}
+
+		// Fixed height
+		.h-px-#{$size} {
+			height: #{$size}px !important;
+		}
+
+		// Max height
+		.max-h-px-#{$size} {
+			max-height: #{$size}px !important;
+		}
+
+		// Min height
+		.min-h-px-#{$size} {
+			min-height: #{$size}px !important;
+		}
+	}
+}
+
+@mixin generate-custom-colors() {
+	// Background colors
+	.bg-gray {
+		background-color: #f0f0f0 !important;
+	}
+
+	// Text colors
+
+	// Border colors
+}
+
+@include generate-custom-colors();
+@include generate-width-utilities();

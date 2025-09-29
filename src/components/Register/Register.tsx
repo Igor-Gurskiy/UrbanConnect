@@ -19,7 +19,6 @@ export const Register: FC = () => {
 
 	useEffect(() => {
 		dispatch(clearError());
-
 		return () => {
 			dispatch(clearError());
 		};

@@ -8,9 +8,9 @@
 //     title: string
 // }
 
-export type TLogModal = {
+export type TModalUI = {
 	title: string;
 	handleCancel: () => void;
-	open: boolean;
+	// open: boolean;
 	children: React.ReactNode;
 };

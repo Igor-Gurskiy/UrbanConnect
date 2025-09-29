@@ -19,6 +19,9 @@ export type TChatHeader = {
 	isOnline: boolean;
 	avatar?: string;
 	type: string;
+	isAdmin?: boolean;
+	onEditGroup?: () => void | undefined;
+	onAddMember?: () => void | undefined;
 };
 
 export type TChatBody = {

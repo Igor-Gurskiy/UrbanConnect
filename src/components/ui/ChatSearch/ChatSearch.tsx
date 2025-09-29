@@ -41,25 +41,21 @@ export const ChatSearchUI: FC<TChatSearch> = memo(
 		);
 
 		return (
-			<div style={{ padding: '4px', position: 'relative' }}>
+			<div style={{ position: 'relative' }}>
 				<Input
 					value={search}
 					onChange={handleSearchChange}
 					placeholder="Search by user ID..."
-					style={{}}
 				/>
 
 				{search.length > 0 && (
 					<div
+						className="position-absolute bg-gray w-100"
 						style={{
-							position: 'absolute',
 							top: '100%',
-							left: '16px',
-							right: '16px',
 							zIndex: 100,
-							maxHeight: '20vh',
+							maxHeight: '30vh',
 							overflowY: 'auto',
-							background: '#ebebebff',
 						}}
 					>
 						{selectedUsers.length > 0 && (

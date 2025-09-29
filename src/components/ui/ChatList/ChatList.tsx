@@ -31,47 +31,49 @@ export const ChatListUI: FC<TChatList> = memo(
 		const renderChat = useCallback(
 			(chat: TChat) => (
 				<List.Item
+					className="p-2 border-bottom"
 					style={{
-						display: 'flex',
+						display: 'grid',
+						gridTemplateColumns: 'auto 1fr auto',
 						alignItems: 'center',
-						justifyContent: 'space-between',
-						gap: '16px',
-						padding: '12px 16px',
-						borderBottom: '1px solid #f0f0f0',
 					}}
 					onClick={() => onChatSelect(chat)}
 				>
-					<div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-						<Avatar>{avatarContent(chat)}</Avatar>
-						<div
+					<Avatar
+						style={{
+							flexShrink: 0,
+						}}
+					>
+						{avatarContent(chat)}
+					</Avatar>
+					<div
+						style={{
+							minWidth: 0,
+							flex: 1,
+							paddingInline: '8px',
+						}}
+					>
+						<Typography.Paragraph
 							style={{
-								display: 'flex',
-								flexDirection: 'column',
-								maxWidth: '200px',
+								fontWeight: 'bold',
+								overflow: 'hidden',
+								whiteSpace: 'nowrap',
+								textOverflow: 'ellipsis',
 							}}
 						>
-							<Typography.Paragraph
-								style={{
-									fontWeight: 'bold',
-									overflow: 'hidden',
-									whiteSpace: 'nowrap',
-									textOverflow: 'ellipsis',
-								}}
-							>
-								{chatName(chat)}
-							</Typography.Paragraph>
-							<Typography.Paragraph
-								style={{
-									overflow: 'hidden',
-									whiteSpace: 'nowrap',
-									textOverflow: 'ellipsis',
-								}}
-							>
-								{chat.lastMessage?.text}
-							</Typography.Paragraph>
-						</div>
+							{chatName(chat)}
+						</Typography.Paragraph>
+						<Typography.Paragraph
+							style={{
+								overflow: 'hidden',
+								whiteSpace: 'nowrap',
+								textOverflow: 'ellipsis',
+							}}
+						>
+							{chat.lastMessage?.text}
+						</Typography.Paragraph>
 					</div>
-					<div style={{ display: 'flex', gap: '8px' }}>
+					<div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
 						{chat.lastMessage && (
 							<Typography.Paragraph>
 								{formatTime(chat.lastMessage.createdAt)}
@@ -95,17 +97,16 @@ export const ChatListUI: FC<TChatList> = memo(
 		return (
 			<>
 				<div
+					className="d-flex flex-column h-100"
 					style={{
-						display: 'flex',
-						justifyContent: 'center',
-						width: '100%',
-						padding: '16px',
+						minHeight: 0,
 					}}
 				>
 					<List
 						style={{
-							width: '100%',
-							maxWidth: 400,
+							flex: 1,
+							overflowY: 'auto',
+							height: '100%',
 						}}
 						dataSource={chats}
 						renderItem={renderChat}

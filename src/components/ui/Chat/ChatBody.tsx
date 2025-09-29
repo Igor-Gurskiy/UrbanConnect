@@ -43,16 +43,7 @@ export const ChatBodyUI: FC<TChatBody> = memo(
 				return (
 					<>
 						{showDate && (
-							<div
-								style={{
-									textAlign: 'center',
-									padding: '8px',
-									margin: '10px 0',
-									color: '#666',
-									fontSize: '12px',
-									fontWeight: 'bold',
-								}}
-							>
+							<div className="text-center p-2 my-2 text-body-secondary small fw-bold">
 								{formatMessageDate(item.createdAt)}
 							</div>
 						)}
@@ -64,14 +55,16 @@ export const ChatBodyUI: FC<TChatBody> = memo(
 		);
 
 		return (
-			<div style={{ overflowY: 'auto', flex: 1, minHeight: 0 }}>
-				<List
-					ref={listRef}
-					style={{ width: '100%' }}
-					dataSource={messages}
-					renderItem={MessageItem}
-				/>
-				<div ref={messagesEndRef} />
+			<div className="position-relative m-h-px-0">
+				<div className="position-absolute top-0 left-0 right-0 bottom-0 overflow-y-auto w-100">
+					<List
+						className="w-100"
+						ref={listRef}
+						dataSource={messages}
+						renderItem={MessageItem}
+					/>
+					<div ref={messagesEndRef} />
+				</div>
 			</div>
 		);
 	},

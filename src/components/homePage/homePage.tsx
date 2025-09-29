@@ -4,23 +4,14 @@ const { Title, Paragraph } = Typography;
 
 export const HomePage = () => {
 	return (
-		<div
-			style={{
-				maxWidth: '800px',
-				margin: '0 auto',
-				padding: '2rem',
-				textAlign: 'center',
-			}}
-		>
+		<div className="d-flex flex-column justify-content-center align-items-center p-4">
 			<Title level={1}>UrbanConnect</Title>
 
-			<Paragraph style={{ fontSize: '1.2rem', marginBottom: '2rem' }}>
-				Место для общения с соседями и вашим районом
+			<Paragraph className="text-center fs-5">
+				Место для общения с соседями в вашем районе
 			</Paragraph>
 
-			<Paragraph type="secondary" style={{ marginTop: '4rem' }}>
-				Учебный проект для практики веб-разработки
-			</Paragraph>
+			<Paragraph type="secondary">Пет-проект</Paragraph>
 		</div>
 	);
 };

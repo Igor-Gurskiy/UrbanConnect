@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 import { createGroupChat } from '../../services/slices/Chat/Chat';
 import { useDispatch, useSelector } from '../../services/store';
 import { selectUser } from '../../services/slices/Profile/Profile';
+import { useNavigate } from 'react-router-dom';
 
 type TGroupChatForm = {
 	ChatName: string;
@@ -15,7 +16,7 @@ type TGroupChatForm = {
 export const GroupChat = memo(() => {
 	const dispatch = useDispatch();
 	const user = useSelector(selectUser);
-
+	const navigate = useNavigate();
 	const handleCreateChat = useCallback(
 		async (chatData: TGroupChatForm) => {
 			if (!user) return;
@@ -43,16 +44,19 @@ export const GroupChat = memo(() => {
 				};
 
 				await dispatch(createGroupChat(newGroupChat)).unwrap();
+				navigate(`/chat/${newGroupChat.id}`);
 			} catch (error) {
 				console.log('Error creating group chat:', error);
 			}
 		},
 		[dispatch, user]
 	);
-
+	const handleGoBack = useCallback(() => {
+		navigate(-1);
+	}, [navigate]);
 	return (
 		<>
-			<GroupChatUI onCreateChat={handleCreateChat} />
+			<GroupChatUI onCreateChat={handleCreateChat} onGoBack={handleGoBack} />
 		</>
 	);
 });

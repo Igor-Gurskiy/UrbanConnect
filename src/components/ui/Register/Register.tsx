@@ -13,9 +13,15 @@ export const Register: FC<TRegister> = ({
 	handleSubmit,
 	error,
 }) => {
-	const layout = {
-		labelCol: { span: 8 },
-		wrapperCol: { span: 16 },
+	const responsiveLayout = {
+		labelCol: {
+			xs: { span: 24 },
+			sm: { span: 6 },
+		},
+		wrapperCol: {
+			xs: { span: 24 },
+			sm: { span: 18 },
+		},
 	};
 
 	const emailRules: Rule[] = [
@@ -34,27 +40,62 @@ export const Register: FC<TRegister> = ({
 	];
 
 	return (
-		<Form {...layout} onFinish={handleSubmit} key="auth-form">
-			{error && (
-				<Form.Item wrapperCol={{ offset: 8, span: 16 }}>
-					<div className="text-red">{error}</div>
-				</Form.Item>
-			)}
-			<Form.Item label="Username" name="username" rules={usernameRules}>
-				<Input onChange={(e) => setUsername(e.target.value)} value={username} />
-			</Form.Item>
-			<Form.Item label="Email" name="Email" rules={emailRules}>
-				<Input onChange={(e) => setEmail(e.target.value)} value={email} />
-			</Form.Item>
-			<Form.Item label="Password" name="password" rules={passwordRules}>
-				<Input.Password
-					onChange={(e) => setPassword(e.target.value)}
-					value={password}
-				/>
-			</Form.Item>
-			<Button htmlType="submit" type="default">
-				Submit
-			</Button>
-		</Form>
+		<div className="d-flex flex-column align-items-center justify-content-center ">
+			<div
+				style={{
+					width: '100%',
+					maxWidth: '390px',
+					padding: '40px 20px',
+					position: 'relative',
+				}}
+			>
+				<Form {...responsiveLayout} onFinish={handleSubmit} key="auth-form">
+					{error && (
+						<div
+							className="text-center w-100 text-red"
+							style={{
+								position: 'absolute',
+								top: '0',
+								left: '0',
+								color: 'red',
+							}}
+						>
+							{error}
+						</div>
+					)}
+					<Form.Item label="Username" name="username" rules={usernameRules}>
+						<Input
+							onChange={(e) => setUsername(e.target.value)}
+							value={username}
+						/>
+					</Form.Item>
+					<Form.Item label="Email" name="Email" rules={emailRules}>
+						<Input onChange={(e) => setEmail(e.target.value)} value={email} />
+					</Form.Item>
+					<Form.Item label="Password" name="password" rules={passwordRules}>
+						<Input.Password
+							onChange={(e) => setPassword(e.target.value)}
+							value={password}
+						/>
+					</Form.Item>
+					<Form.Item
+						wrapperCol={{
+							xs: { span: 24 },
+							sm: { span: 18, offset: 6 },
+						}}
+					>
+						<div className="d-flex justify-content-center w-100">
+							<Button
+								htmlType="submit"
+								type="default"
+								style={{ minWidth: '120px' }}
+							>
+								Submit
+							</Button>
+						</div>
+					</Form.Item>
+				</Form>
+			</div>
+		</div>
 	);
 };

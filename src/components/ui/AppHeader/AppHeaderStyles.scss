@@ -1,0 +1,26 @@
+.rainbow-bootstrap {
+	background: linear-gradient(
+		90deg,
+		var(--bs-danger),
+		var(--bs-warning),
+		var(--bs-success),
+		var(--bs-info),
+		var(--bs-primary),
+		var(--bs-purple)
+	);
+	background-size: 300% 100%;
+	-webkit-background-clip: text;
+	background-clip: text;
+	-webkit-text-fill-color: transparent;
+	animation: rainbow-flow 4s ease-in-out infinite;
+}
+
+@keyframes rainbow-flow {
+	0%,
+	100% {
+		background-position: 0% 50%;
+	}
+	50% {
+		background-position: 100% 50%;
+	}
+}

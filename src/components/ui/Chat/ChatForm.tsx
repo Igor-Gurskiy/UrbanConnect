@@ -37,23 +37,14 @@ export const ChatFormUI: FC<TChatForm> = memo(
 
 		return (
 			<div
-				style={{
-					backgroundColor: '#f0f0f0',
-					padding: '10px',
-					display: 'flex',
-					alignItems: 'center',
-					justifyContent: 'space-between',
-					maxHeight: '18vh',
-				}}
+				className="bg-gray p-2 d-flex align-items-center justify-content-between"
+				style={
+					{
+						// maxHeight: 'fit-content',
+					}
+				}
 			>
-				<div
-					style={{
-						display: 'flex',
-						gap: '10px',
-						alignItems: 'center',
-						width: '100%',
-					}}
-				>
+				<div className="d-flex gap-2 align-items-center w-100">
 					<Button
 						type="text"
 						icon={<SmileOutlined />}
@@ -70,15 +61,10 @@ export const ChatFormUI: FC<TChatForm> = memo(
 						onKeyDown={handleKeyPress}
 						autoSize={{ minRows: 1, maxRows: 3 }}
 						placeholder="Message"
-						style={{
-							flex: 1,
-							borderRadius: '0px',
-							padding: '8px 12px',
-							resize: 'none',
-							lineHeight: '1.5',
-						}}
+						className="flex-fill p-2"
 					></TextArea>
 					<Button
+						className="flex-shrink-0"
 						type="primary"
 						icon={<SendOutlined />}
 						onClick={handleSendMessage}
