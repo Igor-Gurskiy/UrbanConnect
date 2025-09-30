@@ -4,7 +4,7 @@ import { ChatListUI } from '../ui/ChatList/ChatList';
 import { useSelector, useDispatch } from '../../services/store';
 import { selectUser } from '../../services/slices/Profile/Profile';
 import type { TChat } from '../../utils/types';
-import { deleteChatById } from '../../services/slices/Chat/Chat';
+import { deleteChatById, getChats } from '../../services/slices/Chat/Chat';
 
 interface IChatListProps {
 	chats: TChat[];
@@ -18,9 +18,8 @@ export const ChatList: FC<IChatListProps> = memo(
 		const onChatDelete = useCallback(
 			async (chatId: string) => {
 				if (!user) return;
-				console.log('chatId', chatId);
-				console.log('user.id', user.id);
 				await dispatch(deleteChatById({ chatId, userAuth: user.id })).unwrap();
+				await dispatch(getChats());
 			},
 			[dispatch, user]
 		);

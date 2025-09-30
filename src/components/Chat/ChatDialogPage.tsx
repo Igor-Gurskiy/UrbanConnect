@@ -9,7 +9,6 @@ import {
 	selectOpenChat,
 } from '../../services/slices/Chat/Chat';
 import {
-	useLocation,
 	useNavigate,
 	useOutletContext,
 	useParams,
@@ -21,24 +20,22 @@ export const ChatDialogPage: FC = () => {
 	const { id } = useParams();
 	const navigate = useNavigate();
 	const dispatch = useDispatch();
-	const location = useLocation();
-	const tempChat = location.state?.newChat;
 	const { headerHeight } = useOutletContext<{ headerHeight: string }>();
 	const openChat = useSelector(selectOpenChat);
 	const isLoading = useSelector(selectIsLoading);
+
 	useEffect(() => {
-		dispatch(clearOpenChat());
-		if (id) {
+		if (id && !openChat) {
 			dispatch(getChatById(id));
 		}
-	}, [id, dispatch]);
+	}, [id, openChat, dispatch]);
 
-	const currentChat = tempChat || openChat;
 	const handleBackClick = () => {
 		navigate('/chat');
+		dispatch(clearOpenChat());
 	};
 
-	if (!currentChat) {
+	if (!openChat) {
 		return <div>Чат не найден</div>;
 	}
 	if (isLoading) {
@@ -62,7 +59,7 @@ export const ChatDialogPage: FC = () => {
 					Назад
 				</Button>
 			</div>
-			<ChatDialog chat={currentChat} />
+			<ChatDialog chat={openChat} />
 		</div>
 	);
 };

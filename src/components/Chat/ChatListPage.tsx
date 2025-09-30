@@ -9,6 +9,7 @@ import {
 	getChats,
 	selectChats,
 	selectIsLoading,
+	setOpenChat,
 } from '../../services/slices/Chat/Chat';
 import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
@@ -26,6 +27,7 @@ export const ChatListPage: FC = () => {
 
 	useEffect(() => {
 		dispatch(getChats());
+		console.log('chats', chats);
 	}, [dispatch]);
 
 	const findExistingChat = useCallback(
@@ -34,20 +36,23 @@ export const ChatListPage: FC = () => {
 				chats.find(
 					(chat) =>
 						chat.type === 'private' &&
-						chat.users.includes(currentUserId) &&
-						(chat.users.includes(userId) || chat.usersDeleted.includes(userId))
+						chat.users.includes(userId) &&
+						chat.usersDeleted.includes(currentUserId)
 				) || null
 			);
 		},
 		[]
 	);
+
 	const handleUserSelect = useCallback(
 		(user: TUser) => {
 			if (!userAuth) return;
 			setSearch('');
 
 			const existingChat = findExistingChat(user.id, chats, userAuth.id);
+			console.log('existingChat', existingChat);
 			if (existingChat) {
+				dispatch(setOpenChat(existingChat));
 				navigate(`/chat/${existingChat.id}`);
 			} else {
 				const newChat = {
@@ -60,6 +65,7 @@ export const ChatListPage: FC = () => {
 					lastMessage: null,
 					usersDeleted: [],
 				};
+				dispatch(setOpenChat(newChat));
 				navigate(`/chat/${newChat.id}`, { state: { newChat } });
 			}
 		},
@@ -67,6 +73,7 @@ export const ChatListPage: FC = () => {
 	);
 
 	const handleChatSelect = useCallback((chat: TChat | null) => {
+		dispatch(setOpenChat(chat));
 		navigate(`/chat/${chat?.id}`);
 	}, []);
 

@@ -2,7 +2,11 @@ import { memo, useCallback } from 'react';
 import { GroupChatUI } from '../ui/GroupChat/GroupChat';
 import type { TChat } from '../../utils/types';
 import { v4 as uuidv4 } from 'uuid';
-import { createGroupChat } from '../../services/slices/Chat/Chat';
+import {
+	createGroupChat,
+	getChats,
+	setOpenChat,
+} from '../../services/slices/Chat/Chat';
 import { useDispatch, useSelector } from '../../services/store';
 import { selectUser } from '../../services/slices/Profile/Profile';
 import { useNavigate } from 'react-router-dom';
@@ -44,6 +48,8 @@ export const GroupChat = memo(() => {
 				};
 
 				await dispatch(createGroupChat(newGroupChat)).unwrap();
+				await dispatch(getChats()).unwrap();
+				dispatch(setOpenChat(newGroupChat));
 				navigate(`/chat/${newGroupChat.id}`);
 			} catch (error) {
 				console.log('Error creating group chat:', error);

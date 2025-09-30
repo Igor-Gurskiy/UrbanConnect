@@ -62,20 +62,28 @@ async function writeDB(data) {
   await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
 }
 
+async function getUserChatsFromDB(userId) {
+  const db = await readDB();
+  return db.chats.filter((chat) => chat.users.includes(userId));
+}
 // WebSocket соединения
-wss.on("connection", (ws, req) => {
+wss.on("connection", async (ws, req) => {
   console.log("WebSocket connection established");
   const url = new URL(req.url, `http://${req.headers.host}`);
   const userId = url.searchParams.get("userId");
-  const chatId = url.searchParams.get("chatId");
-  if (userId) {
-    connectedUsers.set(userId, ws);
-    console.log(`User ${userId} connected`);
-  }
+  // const chatId = url.searchParams.get("chatId");
+  ws.userId = userId;
+  const userChats = await getUserChatsFromDB(userId);
+  connectedUsers.set(userId, { ws: ws, userId: userId, userChats: userChats.map(chat => chat.id) });
+  console.log(`User ${userId} connected to chats:`, userChats.map(chat => chat.id));
+  // if (userId) {
+  //   connectedUsers.set(userId, ws);
+  //   console.log(`User ${userId} connected`);
+  // }
 
-  if (chatId) {
-    console.log(`Client connected to chat ${chatId}`);
-  }
+  // if (chatId) {
+  //   console.log(`Client connected to chat ${chatId}`);
+  // }
 
   ws.on("message", (data) => {
     try {
@@ -99,11 +107,14 @@ wss.on("connection", (ws, req) => {
 });
 
 // Функция для broadcast сообщения всем в чате
-function broadcastMessage(message) {
-  wss.clients.forEach((client) => {
-    if (client.readyState === 1) {
-      // 1 = OPEN
-      client.send(JSON.stringify(message));
+async function broadcastMessage(message, chatId) {
+  const db = await readDB();
+  const chat = db.chats.find(chat => chat.id === chatId);
+  if (!chat) return;
+   chat.users.forEach(userId => {
+    const userConnection = connectedUsers.get(userId);
+    if (userConnection && userConnection.ws.readyState === WebSocket.OPEN) {
+      userConnection.ws.send(JSON.stringify(message));
     }
   });
 }
@@ -502,25 +513,11 @@ app.get("/api/chats", async (req, res) => {
       chat.users.includes(decoded.id) || chat.usersDeleted.includes(decoded.id)
     );
 
-    // const formatedChats = userChats.map((chat) => {
-    //   return {
-    //     id: chat.id,
-    //     avatar: chat.avatar,
-    //     name: chat.name,
-    //     type: chat.type,
-    //     users: chat.users,
-    //     lastMessage: chat.lastMessage,
-    //     messages: chat.messages,
-    //     usersDeleted: chat.usersDeleted,
-    //     createdBy: chat.createdBy,
-    //   };
-    // });
-
   const formatedChats = userChats.map((chat) => {
       let chatName = chat.name;
-      
+      const users = [...chat.users, ...chat.usersDeleted];
       if (chat.type === 'private') {
-        const otherUserId = chat.users.find(userId => userId !== decoded.id);
+        const otherUserId = users.find(userId => userId !== decoded.id);
         if (otherUserId) {
           const otherUser = db.users.find(user => user.id === otherUserId);
           if (otherUser) {
@@ -644,7 +641,7 @@ app.post("/api/message", async (req, res) => {
       message: serverMessage,
     };
 
-    broadcastMessage(messageToSend);
+    broadcastMessage(messageToSend, chatId);
 
     return res.status(200).json({
       success: true,
@@ -703,9 +700,6 @@ app.patch("/api/chats/:id", async (req, res) => {
       });
     }
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-
     const db = await readDB();
     const chatId = req.params.id;
     const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
@@ -717,16 +711,11 @@ app.patch("/api/chats/:id", async (req, res) => {
       });
     }
     const chat = db.chats[chatIndex];
-    const userId = decoded.id;
-    if (!chat.usersDeleted.includes(userId)) {
-      return res.status(400).json({
-        success: false,
-        message: "User is not in deleted users list",
-      });
-    }
-    chat.usersDeleted = chat.usersDeleted.filter(user => user !== userId);
-    if (!chat.users.includes(userId)) {
-      chat.users.push(userId);
+
+    if (chat.type === 'private' && chat.usersDeleted.length > 0) {
+      const allUsers = [...new Set([...chat.users, ...chat.usersDeleted])];
+      chat.users = allUsers;
+      chat.usersDeleted = [];
     }
     await writeDB(db);
 
@@ -911,6 +900,21 @@ app.patch("/api/chats/group/addUser/:id", async (req, res) => {
       return res.status(404).json({
         success: false,
         message: "User not found",
+      });
+    }
+    if (chat.usersDeleted.includes(user)) {
+      chat.usersDeleted = chat.usersDeleted.filter(deletedUser => deletedUser !== user);
+
+      if (!chat.users.includes(user)) {
+        chat.users.push(user);
+      }
+      
+      await writeDB(db);
+      
+      return res.status(200).json({
+        success: true,
+        chat: db.chats[chatIndex],
+        message: "User restored to the group"
       });
     }
 

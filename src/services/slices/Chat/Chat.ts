@@ -151,6 +151,10 @@ export const ChatSlice = createSlice({
 					chat.messages.push(message);
 					chat.lastMessage = message;
 				}
+				if (state.openChat && state.openChat.id === chatId) {
+					state.openChat.messages.push(message);
+					state.openChat.lastMessage = message;
+				}
 				state.error = '';
 			})
 			.addCase(createMessage.rejected, (state, action) => {

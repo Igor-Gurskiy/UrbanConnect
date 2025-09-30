@@ -1,9 +1,16 @@
-import { memo, useCallback, useMemo, type FC } from 'react';
+import {
+	memo,
+	useCallback,
+	useEffect,
+	useMemo,
+	type FC,
+} from 'react';
 import { useSelector, useDispatch } from '../../services/store';
 import { selectUser } from '../../services/slices/Profile/Profile';
 import {
 	createChatPrivate,
 	createMessage,
+	getChatById,
 	returnUser,
 } from '../../services/slices/Chat/Chat';
 import { v4 as uuidv4 } from 'uuid';
@@ -15,17 +22,22 @@ import { useLocation, useNavigate, useParams } from 'react-router-dom';
 
 interface IChatDialog {
 	chat: TChat | null;
-	onChatCreated?: (chat: TChat) => void;
 }
 
 export const ChatDialog: FC<IChatDialog> = memo(
-	({ chat, onChatCreated }) => {
+	({ chat }) => {
 		const navigate = useNavigate();
 		const { id } = useParams();
 		const user = useSelector(selectUser);
 		const location = useLocation();
-
 		const dispatch = useDispatch();
+
+		useEffect(() => {
+			if (!chat && id) {
+				dispatch(getChatById(id));
+			}
+		}, [chat, id, dispatch]);
+
 		const handleEditGroup = () => {
 			navigate(`/chat/${id}/edit-group`, { state: { background: location } });
 		};
@@ -45,29 +57,19 @@ export const ChatDialog: FC<IChatDialog> = memo(
 					user: user.id,
 				};
 
-				if (chat.messages.length === 0) {
-					await dispatch(
-						createChatPrivate({
-							...chat,
-							messages: [message],
-							lastMessage: message,
-						})
-					);
-					if (onChatCreated) {
-						onChatCreated({
-							...chat,
-							messages: [message],
-							lastMessage: message,
-						});
-					}
+				if (chat.messages.length === 0 && chat.type === 'private') {
+					await dispatch(createChatPrivate(chat));
+					await dispatch(createMessage({ chatId: chat.id, message }));
+					id && dispatch(getChatById(id));
 				} else {
-					if (chat.usersDeleted.includes(user.id)) {
+					if (chat.usersDeleted.length > 0) {
+						console.log('chat.usersDeleted', chat.id);
 						await dispatch(returnUser(chat.id));
 					}
 					dispatch(createMessage({ chatId: chat.id, message }));
 				}
 			},
-			[user, chat, dispatch, onChatCreated]
+			[user, chat, dispatch]
 		);
 
 		const handleSmileClick = useCallback(() => {
@@ -90,7 +92,7 @@ export const ChatDialog: FC<IChatDialog> = memo(
 					onAddMember={isGroupAdmin ? handleAddMember : undefined}
 				/>
 			),
-			[chat]
+			[chat?.id]
 		);
 
 		const chatBody = useMemo(

@@ -17,14 +17,14 @@
     },
     {
       "id": "8a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
-      "email": "maria.ivanova@example.com",
+      "email": "test@test.test",
       "name": "Maria-Ivanova",
       "password": "1",
       "createdAt": "2025-06-10T09:15:22.111Z"
     },
     {
       "id": "9a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
-      "email": "maria.ivanova@example.com",
+      "email": "test1@test.test",
       "name": "Maria-Ivanova",
       "password": "1",
       "createdAt": "2025-06-10T09:15:22.111Z"
@@ -41,9 +41,9 @@
       ],
       "usersDeleted": [],
       "lastMessage": {
-        "id": "3e5128a1-d77e-40ff-ba06-3044c345852a",
-        "text": "hkl",
-        "createdAt": "2025-09-22T14:21:44.160Z",
+        "id": "3b0c5a48-eee2-48dd-9de7-a4c7b81c2b18",
+        "text": "3",
+        "createdAt": "2025-09-30T06:24:20.683Z",
         "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
       },
       "messages": [
@@ -60,57 +60,45 @@
           "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
         },
         {
-          "id": "21e875d0-1d56-4ebe-9fce-6a9247427add",
-          "text": "hj",
-          "createdAt": "2025-09-01T13:44:12.536Z",
+          "id": "3b5993bc-d69a-46e2-8d1f-fb80150a8366",
+          "text": "2",
+          "createdAt": "2025-09-29T16:56:43.392Z",
           "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         },
         {
-          "id": "c5c6331e-6f76-4f9d-b554-17c12869c845",
-          "text": "qwet",
-          "createdAt": "2025-09-16T10:53:27.454Z",
+          "id": "189ea1bb-2f5d-4fc0-827d-c8c727a88974",
+          "text": "2",
+          "createdAt": "2025-09-29T17:06:31.087Z",
           "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         },
         {
-          "id": "01718781-7151-48bc-9aca-40524a7bd474",
-          "text": "й",
-          "createdAt": "2025-09-16T13:52:57.439Z",
+          "id": "0f009c43-7258-48ea-ac6d-905f9b1ea80f",
+          "text": "3",
+          "createdAt": "2025-09-29T17:06:40.833Z",
           "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         },
         {
-          "id": "787751e9-7886-4d2f-b300-796133fee739",
-          "text": "q",
-          "createdAt": "2025-09-22T13:25:03.590Z",
+          "id": "4f2bf56e-f518-4b4f-b597-a1f9db996dcf",
+          "text": "4",
+          "createdAt": "2025-09-29T17:06:45.647Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        },
+        {
+          "id": "b1c4ed0e-35f2-41d1-8327-fb6eadec7847",
+          "text": "3",
+          "createdAt": "2025-09-29T17:06:48.747Z",
           "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
         },
         {
-          "id": "2854a059-3d42-4337-a853-ae436acf5cc3",
-          "text": "t",
-          "createdAt": "2025-09-22T13:25:13.238Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
+          "id": "7379edce-fdce-4eaa-bdf5-121312f6f0f4",
+          "text": "2",
+          "createdAt": "2025-09-30T06:24:13.338Z",
+          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
         },
         {
-          "id": "f983b7e1-fa68-4710-8ad6-8e4679a112d6",
-          "text": "hjk",
-          "createdAt": "2025-09-22T14:21:35.952Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "2710c646-52c7-4205-9363-12be3299746d",
-          "text": "hkl;",
-          "createdAt": "2025-09-22T14:21:40.935Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "4f94d8de-2c41-4dc5-b371-7688d22a97f3",
-          "text": "hkl;",
-          "createdAt": "2025-09-22T14:21:42.693Z",
-          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
-        },
-        {
-          "id": "3e5128a1-d77e-40ff-ba06-3044c345852a",
-          "text": "hkl",
-          "createdAt": "2025-09-22T14:21:44.160Z",
+          "id": "3b0c5a48-eee2-48dd-9de7-a4c7b81c2b18",
+          "text": "3",
+          "createdAt": "2025-09-30T06:24:20.683Z",
           "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
         }
       ]
@@ -314,104 +302,48 @@
       "createdBy": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
     },
     {
-      "id": "6af33576-0fb8-411d-a0b9-76ed669e1537",
-      "name": "Maria-Ivanova",
+      "id": "8f43b7a1-abcf-416f-baa1-0e403645a8eb",
+      "name": "Alex-Petrov",
       "type": "private",
       "users": [
+        "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1",
         "9a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
       ],
       "messages": [
         {
-          "id": "c0e4468e-0f5d-4a0b-acb2-ab7632f1bed4",
+          "id": "3afb6dd3-5cf1-45f1-bca6-0c41988fd191",
           "text": "2",
-          "createdAt": "2025-09-21T15:09:43.671Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+          "createdAt": "2025-09-30T07:08:51.362Z",
+          "user": "9a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
         },
         {
-          "id": "f276f26d-4667-4200-9672-ae4bc4bc8e43",
-          "text": "2",
-          "createdAt": "2025-09-21T15:10:03.218Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "44bc89ab-3462-4690-a493-97fa31314941",
-          "text": "2",
-          "createdAt": "2025-09-21T15:12:48.368Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "4cbb75da-b920-4be1-ac1e-2736608e511e",
+          "id": "c4a4f5ad-ac65-4acf-88b2-9fca6d7dd3be",
           "text": "3",
-          "createdAt": "2025-09-21T15:12:50.778Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+          "createdAt": "2025-09-30T12:50:20.073Z",
+          "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
         }
       ],
       "lastMessage": {
-        "id": "4cbb75da-b920-4be1-ac1e-2736608e511e",
+        "id": "c4a4f5ad-ac65-4acf-88b2-9fca6d7dd3be",
         "text": "3",
-        "createdAt": "2025-09-21T15:12:50.778Z",
-        "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-      },
-      "usersDeleted": [
-        "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-      ]
-    },
-    {
-      "id": "673de154-331d-4854-bf9d-fb8f21ddd739",
-      "name": "Maria-Ivanova",
-      "type": "private",
-      "users": [
-        "2c9be4ad-1326-4e00-92db-9ddd850969e8",
-        "9a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
-      ],
-      "messages": [
-        {
-          "id": "d449a273-cc0e-477c-83a5-c16a75306881",
-          "text": "2",
-          "createdAt": "2025-09-22T07:59:18.646Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        },
-        {
-          "id": "a6d9d6cd-b543-4b3b-8410-2dd44797b446",
-          "text": "2",
-          "createdAt": "2025-09-22T07:59:24.809Z",
-          "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-        }
-      ],
-      "lastMessage": {
-        "id": "a6d9d6cd-b543-4b3b-8410-2dd44797b446",
-        "text": "2",
-        "createdAt": "2025-09-22T07:59:24.809Z",
-        "user": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+        "createdAt": "2025-09-30T12:50:20.073Z",
+        "user": "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
       },
       "usersDeleted": []
     },
     {
-      "id": "c23e4860-8ae9-49b0-b03d-26592dfb540a",
-      "name": "qw",
+      "id": "ca05e5e4-1bfb-46cc-a858-8b627e5c672f",
+      "name": "5",
       "avatar": "",
       "type": "group",
       "users": [
-        "2c9be4ad-1326-4e00-92db-9ddd850969e8",
+        "9a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p",
         "6e116e86-6d00-4d7a-9bd4-1580ddb5aaa1"
       ],
       "messages": [],
       "lastMessage": null,
       "usersDeleted": [],
-      "createdBy": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-    },
-    {
-      "id": "d1e36965-e914-40ff-9c40-2cb04d922d0e",
-      "name": "йу",
-      "avatar": "",
-      "type": "group",
-      "users": [
-        "2c9be4ad-1326-4e00-92db-9ddd850969e8"
-      ],
-      "messages": [],
-      "lastMessage": null,
-      "usersDeleted": [],
-      "createdBy": "2c9be4ad-1326-4e00-92db-9ddd850969e8"
+      "createdBy": "9a2b3c4d-5e6f-7g8h-9i0j-1k2l3m4n5o6p"
     }
   ]
 }
