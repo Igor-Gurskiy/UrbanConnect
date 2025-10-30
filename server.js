@@ -165,11 +165,11 @@ app.post("/api/register", async (req, res) => {
       where email = $1
     `, [email]);
 
-    if (existingUser) {
+    if (existingUser.rows.length > 0) {
       return res.status(400).json({
         success: false,
         message: "User already exists",
-        user: existingUser,
+        user: existingUser.rows[0],
       });
     }
 
@@ -189,7 +189,7 @@ app.post("/api/register", async (req, res) => {
     // db.users.push(newUser);
     // await writeDB(db);
 
-    const { accessToken, refreshToken } = generateTokens(newUser.id);
+    const { accessToken, refreshToken } = generateTokens(newUser.rows[0].id);
 
     return res.status(200).json({
       success: true,
