@@ -153,17 +153,69 @@ async function broadcastMessage(message, chatId) {
 
 
 // Регистрация
+// app.post("/api/register", async (req, res) => {
+//   try {
+//     const { email, name, password } = req.body;
+
+//     // const db = await readDB();
+//     // const existingUser = db.users.find((user) => user.email === email);
+//     const existingUser = await pool.query(`
+//       select *
+//       from users
+//       where email = $1
+//     `, [email]);
+
+//     if (existingUser.rows.length > 0) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "User already exists",
+//         user: existingUser.rows[0],
+//       });
+//     }
+
+//     // const newUser = {
+//     //   id: uuidv4(),
+//     //   email,
+//     //   name,
+//     //   password,
+//     //   createdAt: new Date().toISOString(),
+//     // };
+//     const newUser = await pool.query(`
+//       insert into users (email, name, password)
+//       values ($1, $2, $3)
+//       returning id, email, name, created_at
+//     `, [ email, name, password]);
+
+//     // db.users.push(newUser);
+//     // await writeDB(db);
+
+//     const { accessToken, refreshToken } = generateTokens(newUser.rows[0].id);
+
+//     return res.status(200).json({
+//       success: true,
+//       message: "User registered successfully",
+//       user: {
+//         email: newUser.rows[0].email,
+//         name: newUser.rows[0].name,
+//         id: newUser.rows[0].id,
+//       },
+//       accessToken,
+//       refreshToken,
+//     });
+//   } catch (error) {
+//     return res.status(500).json({ success: false, message: "Ошибка сервера" });
+//   }
+// });
 app.post("/api/register", async (req, res) => {
   try {
     const { email, name, password } = req.body;
 
-    // const db = await readDB();
-    // const existingUser = db.users.find((user) => user.email === email);
-    const existingUser = await pool.query(`
-      select *
-      from users
-      where email = $1
-    `, [email]);
+    console.log('Registration attempt:', { email, name }); // Логируем запрос
+
+    const existingUser = await pool.query(
+      'SELECT * FROM users WHERE email = $1',
+      [email]
+    );
 
     if (existingUser.rows.length > 0) {
       return res.status(400).json({
@@ -173,21 +225,13 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
-    // const newUser = {
-    //   id: uuidv4(),
-    //   email,
-    //   name,
-    //   password,
-    //   createdAt: new Date().toISOString(),
-    // };
-    const newUser = await pool.query(`
-      insert into users (email, name, password)
-      values ($1, $2, $3)
-      returning id, email, name, created_at
-    `, [ email, name, password]);
+    const newUser = await pool.query(
+      `INSERT INTO users (email, name, password) 
+       VALUES ($1, $2, $3) RETURNING id, email, name, created_at`,
+      [email, name, password]
+    );
 
-    // db.users.push(newUser);
-    // await writeDB(db);
+    console.log('New user created:', newUser.rows[0]); // Логируем создание
 
     const { accessToken, refreshToken } = generateTokens(newUser.rows[0].id);
 
@@ -203,7 +247,12 @@ app.post("/api/register", async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    return res.status(500).json({ success: false, message: "Ошибка сервера" });
+    console.error('Registration error details:', error); // Детальный лог ошибки
+    return res.status(500).json({ 
+      success: false, 
+      message: "Ошибка сервера",
+      error: error.message // Добавляем детали ошибки в ответ
+    });
   }
 });
 
