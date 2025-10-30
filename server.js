@@ -9,6 +9,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import { createServer } from "http";
 import { WebSocketServer } from "ws";
+import pkg from 'pg';
 
 dotenv.config();
 const ACCESS_TOKEN_SECRET = process.env.ACCESS_TOKEN_SECRET;
@@ -20,8 +21,15 @@ const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = process.env.PORT || 3001;
-const DB_PATH = path.join(__dirname, "db.json");
+// const DB_PATH = path.join(__dirname, "db.json");
 
+const { Pool } = pkg;
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  }
+})
 // Middleware
 // app.use(cors());
 app.use(cors({
@@ -41,31 +49,41 @@ const wss = new WebSocketServer({ server: httpServer });
 const connectedUsers = new Map();
 
 // Инициализация БД
-async function initDB() {
-  try {
-    await fs.access(DB_PATH);
-  } catch {
-    await fs.writeFile(
-      DB_PATH,
-      JSON.stringify({ users: [], chats: [] }, null, 2)
-    );
-  }
-}
+// async function initDB() {
+//   try {
+//     await fs.access(DB_PATH);
+//   } catch {
+//     await fs.writeFile(
+//       DB_PATH,
+//       JSON.stringify({ users: [], chats: [] }, null, 2)
+//     );
+//   }
+// }
 
 // Чтение/запись БД
-async function readDB() {
-  const data = await fs.readFile(DB_PATH, "utf8");
-  return JSON.parse(data);
-}
+// async function readDB() {
+//   const data = await fs.readFile(DB_PATH, "utf8");
+//   return JSON.parse(data);
+// }
 
-async function writeDB(data) {
-  await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
-}
+// async function writeDB(data) {
+//   await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
+// }
 
+// async function getUserChatsFromDB(userId) {
+//   const db = await readDB();
+//   return db.chats.filter((chat) => chat.users.includes(userId));
+// }
 async function getUserChatsFromDB(userId) {
-  const db = await readDB();
-  return db.chats.filter((chat) => chat.users.includes(userId));
+  const result = await pool.query(`
+    select c.*
+    from chats c
+    join chat_users cu on c.id = cu.chat_id
+    where cu.user_id = $1 and cu.is_deleted = false
+  `, [userId]);
+  return result.rows;
 }
+
 // WebSocket соединения
 wss.on("connection", async (ws, req) => {
   console.log("WebSocket connection established");
@@ -107,25 +125,45 @@ wss.on("connection", async (ws, req) => {
 });
 
 // Функция для broadcast сообщения всем в чате
+// async function broadcastMessage(message, chatId) {
+//   const db = await readDB();
+//   const chat = db.chats.find(chat => chat.id === chatId);
+//   if (!chat) return;
+//    chat.users.forEach(userId => {
+//     const userConnection = connectedUsers.get(userId);
+//     if (userConnection && userConnection.ws.readyState === WebSocket.OPEN) {
+//       userConnection.ws.send(JSON.stringify(message));
+//     }
+//   });
+// }
 async function broadcastMessage(message, chatId) {
-  const db = await readDB();
-  const chat = db.chats.find(chat => chat.id === chatId);
-  if (!chat) return;
-   chat.users.forEach(userId => {
-    const userConnection = connectedUsers.get(userId);
+ const usersResult = await pool.query(`
+    select user_id
+    from chat_users
+    where chat_id = $1 and is_deleted = false
+  `, [chatId]);
+
+  usersResult.rows.forEach(row => {
+    const userConnection = connectedUsers.get(row.user_id);
     if (userConnection && userConnection.ws.readyState === WebSocket.OPEN) {
       userConnection.ws.send(JSON.stringify(message));
     }
   });
 }
 
+
 // Регистрация
 app.post("/api/register", async (req, res) => {
   try {
     const { email, name, password } = req.body;
 
-    const db = await readDB();
-    const existingUser = db.users.find((user) => user.email === email);
+    // const db = await readDB();
+    // const existingUser = db.users.find((user) => user.email === email);
+    const existingUser = await pool.query(`
+      select *
+      from users
+      where email = $1
+    `, [email]);
 
     if (existingUser) {
       return res.status(400).json({
@@ -135,16 +173,21 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
-    const newUser = {
-      id: uuidv4(),
-      email,
-      name,
-      password,
-      createdAt: new Date().toISOString(),
-    };
+    // const newUser = {
+    //   id: uuidv4(),
+    //   email,
+    //   name,
+    //   password,
+    //   createdAt: new Date().toISOString(),
+    // };
+    const newUser = await pool.query(`
+      insert into users (email, name, password)
+      values ($1, $2, $3)
+      returning id, email, name, created_at
+    `, [ email, name, password]);
 
-    db.users.push(newUser);
-    await writeDB(db);
+    // db.users.push(newUser);
+    // await writeDB(db);
 
     const { accessToken, refreshToken } = generateTokens(newUser.id);
 
@@ -152,9 +195,9 @@ app.post("/api/register", async (req, res) => {
       success: true,
       message: "User registered successfully",
       user: {
-        email: newUser.email,
-        name: newUser.name,
-        id: newUser.id,
+        email: newUser.rows[0].email,
+        name: newUser.rows[0].name,
+        id: newUser.rows[0].id,
       },
       accessToken,
       refreshToken,
@@ -951,11 +994,11 @@ app.get("*", (req, res) => {
 });
 
 // Запуск сервера
-initDB().then(() => {
+// initDB().then(() => {
   httpServer.listen(PORT, () => {
-    // Используем httpServer вместо app
     console.log(`Server running on:
   - Local: http://localhost:${PORT}`);
     console.log("WebSocket server is running");
+    console.log("PostgreSQL connected");
   });
-});
+// });
