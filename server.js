@@ -153,69 +153,17 @@ async function broadcastMessage(message, chatId) {
 
 
 // Регистрация
-// app.post("/api/register", async (req, res) => {
-//   try {
-//     const { email, name, password } = req.body;
-
-//     // const db = await readDB();
-//     // const existingUser = db.users.find((user) => user.email === email);
-//     const existingUser = await pool.query(`
-//       select *
-//       from users
-//       where email = $1
-//     `, [email]);
-
-//     if (existingUser.rows.length > 0) {
-//       return res.status(400).json({
-//         success: false,
-//         message: "User already exists",
-//         user: existingUser.rows[0],
-//       });
-//     }
-
-//     // const newUser = {
-//     //   id: uuidv4(),
-//     //   email,
-//     //   name,
-//     //   password,
-//     //   createdAt: new Date().toISOString(),
-//     // };
-//     const newUser = await pool.query(`
-//       insert into users (email, name, password)
-//       values ($1, $2, $3)
-//       returning id, email, name, created_at
-//     `, [ email, name, password]);
-
-//     // db.users.push(newUser);
-//     // await writeDB(db);
-
-//     const { accessToken, refreshToken } = generateTokens(newUser.rows[0].id);
-
-//     return res.status(200).json({
-//       success: true,
-//       message: "User registered successfully",
-//       user: {
-//         email: newUser.rows[0].email,
-//         name: newUser.rows[0].name,
-//         id: newUser.rows[0].id,
-//       },
-//       accessToken,
-//       refreshToken,
-//     });
-//   } catch (error) {
-//     return res.status(500).json({ success: false, message: "Ошибка сервера" });
-//   }
-// });
 app.post("/api/register", async (req, res) => {
   try {
     const { email, name, password } = req.body;
 
-    console.log('Registration attempt:', { email, name }); // Логируем запрос
-
-    const existingUser = await pool.query(
-      'SELECT * FROM users WHERE email = $1',
-      [email]
-    );
+    // const db = await readDB();
+    // const existingUser = db.users.find((user) => user.email === email);
+    const existingUser = await pool.query(`
+      select *
+      from users
+      where email = $1
+    `, [email]);
 
     if (existingUser.rows.length > 0) {
       return res.status(400).json({
@@ -225,13 +173,21 @@ app.post("/api/register", async (req, res) => {
       });
     }
 
-    const newUser = await pool.query(
-      `INSERT INTO users (email, name, password) 
-       VALUES ($1, $2, $3) RETURNING id, email, name, created_at`,
-      [email, name, password]
-    );
+    // const newUser = {
+    //   id: uuidv4(),
+    //   email,
+    //   name,
+    //   password,
+    //   createdAt: new Date().toISOString(),
+    // };
+    const newUser = await pool.query(`
+      insert into users (email, name, password)
+      values ($1, $2, $3)
+      returning id, email, name, created_at
+    `, [ email, name, password]);
 
-    console.log('New user created:', newUser.rows[0]); // Логируем создание
+    // db.users.push(newUser);
+    // await writeDB(db);
 
     const { accessToken, refreshToken } = generateTokens(newUser.rows[0].id);
 
@@ -247,12 +203,7 @@ app.post("/api/register", async (req, res) => {
       refreshToken,
     });
   } catch (error) {
-    console.error('Registration error details:', error); // Детальный лог ошибки
-    return res.status(500).json({ 
-      success: false, 
-      message: "Ошибка сервера",
-      error: error.message // Добавляем детали ошибки в ответ
-    });
+    return res.status(500).json({ success: false, message: "Ошибка сервера" });
   }
 });
 
@@ -261,17 +212,22 @@ app.post("/api/login", async (req, res) => {
   try {
     const { email, password, remember = false } = req.body;
 
-    const db = await readDB();
-    const existingUser = db.users.find((user) => user.email === email);
+    // const db = await readDB();
+    // const existingUser = db.users.find((user) => user.email === email);
+    const existingUser = await pool.query(`
+      select id, email, name, avatar
+      from users
+      where email = $1
+    `, [email]);
 
-    if (!existingUser) {
+    if (existingUser.rows.length === 0) {
       return res.status(400).json({
         success: false,
         message: "Invalid password or email",
       });
     }
 
-    if (existingUser.password !== password) {
+    if (existingUser.rows[0].password !== password) {
       return res.status(400).json({
         success: false,
         message: "Invalid password or email",
@@ -281,7 +237,7 @@ app.post("/api/login", async (req, res) => {
     const expiresIn = remember ? "30d" : "15m";
     const refreshExpiresIn = remember ? "60d" : "1d";
     const { accessToken, refreshToken } = generateTokens(
-      existingUser.id,
+      existingUser.rows[0].id,
       expiresIn,
       refreshExpiresIn
     );
@@ -290,9 +246,9 @@ app.post("/api/login", async (req, res) => {
       success: true,
       message: "User logged in successfully",
       user: {
-        email: existingUser.email,
-        name: existingUser.name,
-        id: existingUser.id,
+        email: existingUser.rows[0].email,
+        name: existingUser.rows[0].name,
+        id: existingUser.rows[0].id,
       },
       accessToken,
       refreshToken,
@@ -318,10 +274,15 @@ app.get("/api/user", async (req, res) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-    const db = await readDB();
-    const user = db.users.find((user) => user.id === decoded.id);
+    // const db = await readDB();
+    // const user = db.users.find((user) => user.id === decoded.id);
+    const user = await pool.query(`
+      select *
+      from users
+      where id = $1
+    `, [decoded.id]);
 
-    if (!user) {
+    if (user.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -330,10 +291,10 @@ app.get("/api/user", async (req, res) => {
     return res.status(200).json({
       success: true,
       user: {
-        email: user.email,
-        name: user.name,
-        id: user.id,
-        avatar: user.avatar || '',
+        email: user.rows[0].email,
+        name: user.rows[0].name,
+        id: user.rows[0].id,
+        avatar: user.rows[0].avatar || '',
       },
     });
   } catch (error) {
