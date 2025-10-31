@@ -325,37 +325,50 @@ app.get("/api/users", async (req, res) => {
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
     const { search  } = req.query;
-    const db = await readDB();
+    // const db = await readDB();
+
     if (!search ) {
-      const users = db.users
-        .filter(user => user.id !== decoded.id)
-        .map((user) => ({
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        }));
+      // const users = db.users
+      //   .filter(user => user.id !== decoded.id)
+      //   .map((user) => ({
+      //     id: user.id,
+      //     email: user.email,
+      //     name: user.name,
+      //   }));
+
+      const users = await pool.query(`
+        select id, email, name, avatar
+        from users
+        where id != $1
+      `, [decoded.id]);
       return res.status(200).json({
         success: true,
-        users: users,
+        users: users.rows,
       });
     }
 
-    const filteredUsers = db.users.filter(user => 
-      user.id !== decoded.id && (
-        user.id.includes(search) || 
-        user.name.includes(search) || 
-        user.email.includes(search)
-      )
-    );
+    // const filteredUsers = db.users.filter(user => 
+    //   user.id !== decoded.id && (
+    //     user.id.includes(search) || 
+    //     user.name.includes(search) || 
+    //     user.email.includes(search)
+    //   )
+    // );
+    const users = await pool.query(`
+      select id, email, name, avatar
+      from users
+      where id != $1 and (id like $2 or name like $2 or email like $2)
+    `, [decoded.id, `%${search}%`]);
 
-    const users = filteredUsers.map((user) => ({
-      id: user.id,
-      email: user.email,
-      name: user.name,
-    }));
+    // const users = filteredUsers.map((user) => ({
+    //   id: user.id,
+    //   email: user.email,
+    //   name: user.name,
+    // }));
+
     return res.status(200).json({
       success: true,
-      users: users,
+      users: users.rows,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });
@@ -365,9 +378,15 @@ app.get("/api/users", async (req, res) => {
 // Получаем пользователя по id
 app.get("/api/user/:id", async (req, res) => {
   try {
-    const db = await readDB();
-    const user = db.users.find((user) => user.id === req.params.id);
-    if (!user) {
+    // const db = await readDB();
+    // const user = db.users.find((user) => user.id === req.params.id);
+    const user = await pool.query(`
+      select *
+      from users
+      where id = $1
+    `, [req.params.id]);
+
+    if (user.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -377,9 +396,9 @@ app.get("/api/user/:id", async (req, res) => {
     return res.status(200).json({
       success: true,
       user: {
-        id: user.id,
-        email: user.email,
-        name: user.name,
+        id: user.rows[0].id,
+        email: user.rows[0].email,
+        name: user.rows[0].name,
       },
     });
   } catch {
@@ -399,17 +418,22 @@ app.post("/api/token", async (req, res) => {
     }
 
     const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
-    const db = await readDB();
-    const user = db.users.find((user) => user.id === decoded.id);
+    // const db = await readDB();
+    // const user = db.users.find((user) => user.id === decoded.id);
+    const user = await pool.query(`
+      select *
+      from users
+      where id = $1
+    `, [decoded.id]);
 
-    if (!user) {
+    if (user.rows.length === 0) {
       return res
         .status(404)
         .json({ success: false, message: "User not found" });
     }
 
     const { accessToken, refreshToken: newRefreshToken } = generateTokens(
-      user.id
+      user.rows[0].id
     );
 
     return res.status(200).json({
@@ -450,10 +474,15 @@ app.patch("/api/user", async (req, res) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-    const db = await readDB();
-    const user = db.users.find((user) => user.id === decoded.id);
+    // const db = await readDB();
+    // const user = db.users.find((user) => user.id === decoded.id);
+    const user = await pool.query(`
+      select *
+      from users
+      where id = $1
+    `, [decoded.id]);
 
-    if (!user) {
+    if (user.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -461,14 +490,14 @@ app.patch("/api/user", async (req, res) => {
     }
 
     if (req.body.name !== undefined) {
-      user.name = req.body.name;
+      user.rows[0].name = req.body.name;
     }
     
     if (req.body.avatar !== undefined) {
-      user.avatar = req.body.avatar;
+      user.rows[0].avatar = req.body.avatar;
     }
 
-    await writeDB(db);
+    // await writeDB(db);
 
     return res.status(200).json({
       success: true,
@@ -499,10 +528,15 @@ app.patch("/api/user/password", async (req, res) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-    const db = await readDB();
-    const user = db.users.find((user) => user.id === decoded.id);
+    // const db = await readDB();
+    // const user = db.users.find((user) => user.id === decoded.id);
+    const user = await pool.query(`
+      select *
+      from users
+      where id = $1
+    `, [decoded.id]);
 
-    if (!user) {
+    if (user.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found",
@@ -518,15 +552,15 @@ app.patch("/api/user/password", async (req, res) => {
       });
     }
 
-    if (user.password !== oldPassword) {
+    if (user.rows[0].password !== oldPassword) {
       return res.status(400).json({
         success: false,
         message: "Старый пароль неверен",
       });
     }
 
-    user.password = newPassword;
-    await writeDB(db);
+    user.rows[0].password = newPassword;
+    // await writeDB(db);
 
     return res.status(200).json({
       success: true,
@@ -552,45 +586,104 @@ app.get("/api/chats", async (req, res) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-    const db = await readDB();
-    const user = db.users.find((user) => user.id === decoded.id);
+    // const db = await readDB();
+    // const user = db.users.find((user) => user.id === decoded.id);
+    const user = await pool.query(`
+      select *
+      from users
+      where id = $1
+    `, [decoded.id]);
 
-    if (!user) {
+    if (user.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
 
-    const userChats = db.chats.filter((chat) =>
-      chat.users.includes(decoded.id) || chat.usersDeleted.includes(decoded.id)
-    );
+    // const userChats = db.chats.filter((chat) =>
+    //   chat.users.includes(decoded.id) || chat.usersDeleted.includes(decoded.id)
+    // );
+    const userChats = await pool.query(`
+      select 
+        c.*,
+        m.id as last_message_id,
+        m.text as last_message_text,
+        m.created_at as last_message_created_at,
+        m.user_id as last_message_user_id,
+        sender.name as last_message_sender_name,
+        other_user.name as other_user_name,
+        other_user.avatar as other_user_avatar,
+        other_user.id as other_user_id
+      from chats c
+      join chat_users cu on c.id = cu.chat_id
+      left join lateral (
+        select id, text, created_at, user_id
+        from messages
+        where chat_id = c.id
+        order by created_at desc
+        limit 1
+        ) m on true
+      left join users sender on m.user_id = sender.id
+      left join lateral (
+        select user_id
+        from chat_users 
+        where chat_id = c.id and user_id != $1 AND is_deleted = false
+        limit 1
+    ) other_cu on true
+      left join users other_user on other_cu.user_id = other_user.id
+      where cu.user_id = $1 and cu.is_deleted = false
+      group by c.id, m.id, m.text, m.created_at, m.user_id, sender.name, other_user.name, other_user.avatar, other_user.id
+    `, [decoded.id]);
 
-  const formatedChats = userChats.map((chat) => {
-      let chatName = chat.name;
-      const users = [...chat.users, ...chat.usersDeleted];
-      if (chat.type === 'private') {
-        const otherUserId = users.find(userId => userId !== decoded.id);
-        if (otherUserId) {
-          const otherUser = db.users.find(user => user.id === otherUserId);
-          if (otherUser) {
-            chatName = otherUser.name;
-          }
-        }
-      }
+  // const formatedChats = userChats.map((chat) => {
+  //     let chatName = chat.name;
+  //     const users = [...chat.users, ...chat.usersDeleted];
+  //     if (chat.type === 'private') {
+  //       const otherUserId = users.find(userId => userId !== decoded.id);
+  //       if (otherUserId) {
+  //         const otherUser = db.users.find(user => user.id === otherUserId);
+  //         if (otherUser) {
+  //           chatName = otherUser.name;
+  //         }
+  //       }
+  //     }
 
-      return {
-        id: chat.id,
-        avatar: chat.avatar,
-        name: chatName,
-        type: chat.type,
-        users: chat.users,
-        lastMessage: chat.lastMessage,
-        messages: chat.messages,
-        usersDeleted: chat.usersDeleted,
-        createdBy: chat.createdBy,
-      };
-    });
+  //     return {
+  //       id: chat.id,
+  //       avatar: chat.avatar,
+  //       name: chatName,
+  //       type: chat.type,
+  //       users: chat.users,
+  //       lastMessage: chat.lastMessage,
+  //       messages: chat.messages,
+  //       usersDeleted: chat.usersDeleted,
+  //       createdBy: chat.createdBy,
+  //     };
+  //   });
+  const formatedChats = userChats.rows.map(chat => {
+    let chatName = chat.name;
+    if (chat.type === 'private') {
+      chatName = chat.other_user_name || "Unknown User";
+    }
+
+    return {
+      id: chat.id,
+      avatar: chat.avatar || '',
+      name: chatName,
+      type: chat.type,
+      users: [chat.other_user_id, decoded.id].filter(Boolean),
+      lastMessage: chat.last_message_text ? {
+        id: chat.last_message_id,
+        text: chat.last_message_text,
+        createdAt: chat.last_message_created_at,
+        user: chat.last_message_user_id
+      } : null,
+      messages: [],
+      usersDeleted: [],
+      createdBy: chat.createdBy,
+    }
+  })
 
     formatedChats.sort((a, b) => {
       const dateA = a.lastMessage ? new Date(a.lastMessage.createdAt) : new Date(0);
@@ -632,32 +725,106 @@ app.get("/api/chat/:id", async (req, res) => {
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-    const db = await readDB();
-    const chat = db.chats.find((chat) => chat.id === req.params.id);
+    // const db = await readDB();
+    // const chat = db.chats.find((chat) => chat.id === req.params.id);
+const chatAccess = await pool.query(
+      `SELECT c.*, cu.is_deleted 
+       FROM chats c
+       JOIN chat_users cu ON c.id = cu.chat_id
+       WHERE c.id = $1 AND cu.user_id = $2`,
+      [req.params.id, decoded.id]
+    );
 
-    if (!chat) {
+    if (chatAccess.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Chat not found",
       });
     }
 
+    const chat = chatAccess.rows[0];
+
+    // let chatName = chat.name;
+    // if (chat.type === 'private') {
+    //   const otherUserId = chat.users.find(userId => userId !== decoded.id);
+    //   if (otherUserId) {
+    //     const otherUser = db.users.find(user => user.id === otherUserId);
+    //     if (otherUser) {
+    //       chatName = otherUser.name;
+    //     }
+    //   }
+    // }
     let chatName = chat.name;
+    let otherUserInfo = null;
+
     if (chat.type === 'private') {
-      const otherUserId = chat.users.find(userId => userId !== decoded.id);
-      if (otherUserId) {
-        const otherUser = db.users.find(user => user.id === otherUserId);
-        if (otherUser) {
-          chatName = otherUser.name;
-        }
+      const otherUser = await pool.query(
+        `SELECT u.id, u.name, u.avatar 
+         FROM users u
+         JOIN chat_users cu ON u.id = cu.user_id
+         WHERE cu.chat_id = $1 AND cu.user_id != $2 AND cu.is_deleted = false`,
+        [req.params.id, decoded.id]
+      );
+
+      if (otherUser.rows.length > 0) {
+        chatName = otherUser.rows[0].name;
+        otherUserInfo = otherUser.rows[0];
       }
     }
+
+    const messages = await pool.query(
+      `SELECT m.*, u.name as user_name, u.avatar as user_avatar
+       FROM messages m
+       JOIN users u ON m.user_id = u.id
+       WHERE m.chat_id = $1
+       ORDER BY m.created_at ASC`,
+      [req.params.id]
+    );
+
+    // Получаем участников чата
+    const participants = await pool.query(
+      `SELECT u.id, u.name, u.avatar, u.email
+       FROM users u
+       JOIN chat_users cu ON u.id = cu.user_id
+       WHERE cu.chat_id = $1 AND cu.is_deleted = false`,
+      [req.params.id]
+    );
+
+
+
+    // return res.status(200).json({
+    //   success: true,
+    //   chat: {
+    //     ...chat,
+    //     name: chatName
+    //   },
+    // });
 
     return res.status(200).json({
       success: true,
       chat: {
-        ...chat,
-        name: chatName
+        id: chat.id,
+        name: chatName,
+        avatar: chat.avatar,
+        type: chat.type,
+        users: participants.rows.map(p => p.id),
+        userDetails: participants.rows,
+        messages: messages.rows.map(m => ({
+          id: m.id,
+          text: m.text,
+          createdAt: m.created_at,
+          user: m.user_id,
+          userName: m.user_name,
+          userAvatar: m.user_avatar
+        })),
+        lastMessage: messages.rows.length > 0 ? {
+          id: messages.rows[messages.rows.length - 1].id,
+          text: messages.rows[messages.rows.length - 1].text,
+          createdAt: messages.rows[messages.rows.length - 1].created_at,
+          user: messages.rows[messages.rows.length - 1].user_id
+        } : null,
+        usersDeleted: [], 
+        createdBy: chat.created_by,
       },
     });
   } catch (error) {
@@ -669,36 +836,76 @@ app.get("/api/chat/:id", async (req, res) => {
 app.post("/api/message", async (req, res) => {
   try {
     const { message, chatId } = req.body;
-    const db = await readDB();
-    const chat = db.chats.find((chat) => chat.id === chatId);
-
-    if (!chat) {
+    // const db = await readDB();
+    // const chat = db.chats.find((chat) => chat.id === chatId);
+    const chatAccess = await pool.query(
+      `SELECT c.id FROM chats c
+       JOIN chat_users cu ON c.id = cu.chat_id
+       WHERE c.id = $1 AND cu.user_id = $2 AND cu.is_deleted = false`,
+      [chatId, message.user]
+    );
+    // if (!chat) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Chat not found",
+    //   });
+    // }
+    if (chatAccess.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Chat not found",
+        message: "Chat not found or access denied",
       });
     }
-    const serverMessage = {
-      ...message,
-      id: uuidv4(),
-      createdAt: new Date().toISOString(),
-    };
-    chat.messages.push(serverMessage);
-    chat.lastMessage = serverMessage;
-    await writeDB(db);
 
-    // Отправляем сообщение через WebSocket
+    // const serverMessage = {
+    //   ...message,
+    //   id: uuidv4(),
+    //   createdAt: new Date().toISOString(),
+    // };
+    // chat.messages.push(serverMessage);
+    // chat.lastMessage = serverMessage;
+    // await writeDB(db);
+    const serverMessage = await pool.query(
+      `INSERT INTO messages (id, chat_id, user_id, text, created_at)
+       VALUES ($1, $2, $3, $4, $5)
+       RETURNING id, chat_id, user_id, text, created_at`,
+      [uuidv4(), chatId, message.user, message.text, new Date().toISOString()]
+    );
+
+    await pool.query(
+      `UPDATE chats SET last_message_id = $1 WHERE id = $2`,
+      [serverMessage.rows[0].id, chatId]
+    );
+
+    const formattedMessage = {
+      id: serverMessage.rows[0].id,
+      text: serverMessage.rows[0].text,
+      createdAt: serverMessage.rows[0].created_at,
+      user: serverMessage.rows[0].user_id,
+    };
+
+    // // Отправляем сообщение через WebSocket
+    // const messageToSend = {
+    //   type: "message",
+    //   chatId,
+    //   message: serverMessage,
+    // };
+
     const messageToSend = {
       type: "message",
       chatId,
-      message: serverMessage,
+      message: formattedMessage,
     };
 
     broadcastMessage(messageToSend, chatId);
 
-    return res.status(200).json({
+    // return res.status(200).json({
+    //   success: true,
+    //   message: serverMessage,
+    // });
+     return res.status(200).json({
       success: true,
-      message: serverMessage,
+      message: formattedMessage,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });
@@ -709,31 +916,75 @@ app.post("/api/message", async (req, res) => {
 app.delete("/api/chats/:id", async (req, res) => {
   try {
 
-    const db = await readDB();
+    // const db = await readDB();
     const chatId = req.params.id;
     const { userId } = req.body;
-    const chat = db.chats.find((chat) => chat.id === chatId);
-    const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
 
-    if (chatIndex === -1) {
+    // const chat = db.chats.find((chat) => chat.id === chatId);
+    // const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
+
+    // if (chatIndex === -1) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Chat not found",
+    //   });
+    // }
+    const chatCheck = await pool.query(
+      `SELECT c.*, cu.is_deleted 
+       FROM chats c
+       JOIN chat_users cu ON c.id = cu.chat_id
+       WHERE c.id = $1 AND cu.user_id = $2`,
+      [chatId, userId]
+    );
+
+    if (chatCheck.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Chat not found",
       });
     }
-    if (chat.users.length > 1) {
-      db.chats[chatIndex].usersDeleted.push(userId);
-      db.chats[chatIndex].users = db.chats[chatIndex].users.filter(user => user !== userId);
+
+    // if (chat.users.length > 1) {
+    //   db.chats[chatIndex].usersDeleted.push(userId);
+    //   db.chats[chatIndex].users = db.chats[chatIndex].users.filter(user => user !== userId);
+    // } else {
+    //   db.chats.splice(chatIndex, 1)[0];
+    // }
+
+    // await writeDB(db);
+
+
+
+    // return res.status(200).json({
+    //   success: true,
+    //   deletedChat: chat,
+    // });
+    const userCount = parseInt(activeUsers.rows[0].user_count);
+
+    if (userCount > 1) {
+      // Если в чате больше одного участника - помечаем пользователя как удалившего чат
+      await pool.query(
+        `UPDATE chat_users 
+         SET is_deleted = true 
+         WHERE chat_id = $1 AND user_id = $2`,
+        [chatId, userId]
+      );
+      
+      return res.status(200).json({
+        success: true,
+        message: "Chat removed from your list",
+        action: "marked_deleted"
+      });
     } else {
-      db.chats.splice(chatIndex, 1)[0];
+      // Если пользователь последний - удаляем чат полностью
+      await pool.query('DELETE FROM chats WHERE id = $1', [chatId]);
+      
+      return res.status(200).json({
+        success: true,
+        message: "Chat deleted completely",
+        action: "deleted"
+      });
     }
-
-    await writeDB(db);
-
-    return res.status(200).json({
-      success: true,
-      deletedChat: chat,
-    });
   } catch (error) {
     return res.status(500).json({ 
       success: false, 
@@ -753,29 +1004,104 @@ app.patch("/api/chats/:id", async (req, res) => {
       });
     }
 
-    const db = await readDB();
+    // const db = await readDB();
     const chatId = req.params.id;
-    const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
+    // const chatIndex = db.chats.findIndex(chat => chat.id === chatId);
 
-    if (chatIndex === -1) {
+    // if (chatIndex === -1) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Chat not found",
+    //   });
+    // }
+    // const chat = db.chats[chatIndex];
+
+    // if (chat.type === 'private' && chat.usersDeleted.length > 0) {
+    //   const allUsers = [...new Set([...chat.users, ...chat.usersDeleted])];
+    //   chat.users = allUsers;
+    //   chat.usersDeleted = [];
+    // }
+    // await writeDB(db);
+
+    // return res.status(200).json({
+    //   success: true,
+    //   chat: db.chats[chatIndex],
+    // });
+    const chatCheck = await pool.query(
+      `SELECT c.*, cu.is_deleted 
+       FROM chats c
+       JOIN chat_users cu ON c.id = cu.chat_id
+       WHERE c.id = $1 AND cu.user_id = $2`,
+      [chatId, userId]
+    );
+
+    if (chatCheck.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "Chat not found",
       });
     }
-    const chat = db.chats[chatIndex];
 
-    if (chat.type === 'private' && chat.usersDeleted.length > 0) {
-      const allUsers = [...new Set([...chat.users, ...chat.usersDeleted])];
-      chat.users = allUsers;
-      chat.usersDeleted = [];
+    const chat = chatCheck.rows[0];
+
+    // Восстанавливаем чат для пользователя
+    if (chat.is_deleted) {
+      await pool.query(
+        `UPDATE chat_users 
+         SET is_deleted = false 
+         WHERE chat_id = $1 AND user_id = $2`,
+        [chatId, userId]
+      );
     }
-    await writeDB(db);
+
+    // Получаем обновленную информацию о чате
+    const updatedChat = await pool.query(
+      `SELECT c.*, 
+              u.name as other_user_name,
+              u.avatar as other_user_avatar,
+              u.id as other_user_id
+       FROM chats c
+       JOIN chat_users cu ON c.id = cu.chat_id
+       LEFT JOIN chat_users other_cu ON c.id = other_cu.chat_id AND other_cu.user_id != $1
+       LEFT JOIN users u ON other_cu.user_id = u.id
+       WHERE c.id = $2 AND cu.user_id = $1 AND cu.is_deleted = false
+       LIMIT 1`,
+      [userId, chatId]
+    );
+
+    if (updatedChat.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: "Chat not found after restoration",
+      });
+    }
+
+    const chatData = updatedChat.rows[0];
+
+    // Форматируем ответ
+    let chatName = chatData.name;
+    if (chatData.type === 'private') {
+      chatName = chatData.other_user_name || 'Unknown User';
+    }
+
+    const formattedChat = {
+      id: chatData.id,
+      name: chatName,
+      avatar: chatData.avatar,
+      type: chatData.type,
+      users: [userId, chatData.other_user_id].filter(Boolean),
+      lastMessage: null, // Можно доработать получение последнего сообщения
+      messages: [],
+      usersDeleted: [],
+      createdBy: chatData.created_by,
+    };
 
     return res.status(200).json({
       success: true,
-      chat: db.chats[chatIndex],
+      chat: formattedChat,
+      message: "Chat restored successfully"
     });
+
     } catch (error) {
       return res.status(500).json({ 
         success: false, 
@@ -787,19 +1113,113 @@ app.patch("/api/chats/:id", async (req, res) => {
 // Создание чата private
 app.post("/api/chat/private", async (req, res) => {
   try {
-    const chat = req.body;
-    const db = await readDB();
-    if (chat.messages && chat.messages.length > 0) {
-      chat.lastMessage = chat.messages[chat.messages.length - 1];
-    } else {
-      chat.lastMessage = null;
+    // const chat = req.body;
+    // const db = await readDB();
+    // if (chat.messages && chat.messages.length > 0) {
+    //   chat.lastMessage = chat.messages[chat.messages.length - 1];
+    // } else {
+    //   chat.lastMessage = null;
+    // }
+    // db.chats.push(chat);
+    // await writeDB(db);
+
+    // return res.status(200).json({
+    //   success: true,
+    //   chat: chat,
+    // });
+
+    const { users, name, avatar } = req.body;
+
+    console.log('Creating private chat:', { users, name });
+
+    // Проверяем что передано 2 пользователя для приватного чата
+    if (!users || users.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: "Private chat must have exactly 2 users",
+      });
     }
-    db.chats.push(chat);
-    await writeDB(db);
+
+    // Проверяем существование пользователей
+    const usersCheck = await pool.query(
+      'SELECT id FROM users WHERE id = ANY($1)',
+      [users]
+    );
+
+    if (usersCheck.rows.length !== 2) {
+      return res.status(400).json({
+        success: false,
+        message: "One or more users not found",
+      });
+    }
+
+    // Проверяем не существует ли уже такой приватный чат
+    const existingChat = await pool.query(
+      `SELECT c.id 
+       FROM chats c
+       JOIN chat_users cu1 ON c.id = cu1.chat_id
+       JOIN chat_users cu2 ON c.id = cu2.chat_id
+       WHERE c.type = 'private' 
+         AND cu1.user_id = $1 
+         AND cu2.user_id = $2
+         AND cu1.is_deleted = false 
+         AND cu2.is_deleted = false`,
+      [users[0], users[1]]
+    );
+
+    if (existingChat.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Private chat already exists",
+        chatId: existingChat.rows[0].id
+      });
+    }
+
+    // Создаем чат
+    const newChat = await pool.query(
+      `INSERT INTO chats (name, avatar, type) 
+       VALUES ($1, $2, $3) 
+       RETURNING id, name, avatar, type, created_at`,
+      [name, avatar, 'private']
+    );
+
+    const chatId = newChat.rows[0].id;
+
+    // Добавляем пользователей в чат
+    for (const userId of users) {
+      await pool.query(
+        `INSERT INTO chat_users (chat_id, user_id) 
+         VALUES ($1, $2)`,
+        [chatId, userId]
+      );
+    }
+
+    // Получаем информацию о другом пользователе для имени чата
+    const otherUser = await pool.query(
+      `SELECT u.name, u.avatar 
+       FROM users u 
+       WHERE u.id != $1 AND u.id = ANY($2) 
+       LIMIT 1`,
+      [users[0], users]
+    );
+
+    const chatName = otherUser.rows.length > 0 ? otherUser.rows[0].name : name;
+
+    const formattedChat = {
+      id: chatId,
+      name: chatName,
+      avatar: avatar,
+      type: 'private',
+      users: users,
+      lastMessage: null,
+      messages: [],
+      usersDeleted: [],
+      createdBy: users[0], // Первый пользователь как создатель
+    };
 
     return res.status(200).json({
       success: true,
-      chat: chat,
+      chat: formattedChat,
     });
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });
@@ -819,21 +1239,95 @@ app.post("/api/chat/group", async (req, res) => {
 
     const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
-    const chat = req.body;
-    const db = await readDB();
-    if (!chat.users.includes(decoded.id)) {
+    // const chat = req.body;
+    // const db = await readDB();
+    // if (!chat.users.includes(decoded.id)) {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "User must be included in the group",
+    //   });
+    // }
+    // db.chats.push(chat);
+    // await writeDB(db);
+
+    // return res.status(200).json({
+    //   success: true,
+    //   chat: chat,
+    // });
+    const { users, name, avatar } = req.body;
+
+    console.log('Creating group chat:', { name, users, creator: userId });
+
+    // Проверяем что создатель включен в группу
+    if (!users.includes(userId)) {
       return res.status(400).json({
         success: false,
         message: "User must be included in the group",
       });
     }
-    db.chats.push(chat);
-    await writeDB(db);
+
+    // Проверяем существование пользователей
+    const usersCheck = await pool.query(
+      'SELECT id FROM users WHERE id = ANY($1)',
+      [users]
+    );
+
+    if (usersCheck.rows.length !== users.length) {
+      return res.status(400).json({
+        success: false,
+        message: "One or more users not found",
+      });
+    }
+
+    // Проверяем уникальность имени группы (опционально)
+    const existingChat = await pool.query(
+      `SELECT id FROM chats WHERE name = $1 AND type = 'group'`,
+      [name]
+    );
+
+    if (existingChat.rows.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Group chat with this name already exists",
+      });
+    }
+
+    // Создаем групповой чат
+    const newChat = await pool.query(
+      `INSERT INTO chats (name, avatar, type, created_by) 
+       VALUES ($1, $2, $3, $4) 
+       RETURNING id, name, avatar, type, created_by, created_at`,
+      [name, avatar, 'group', userId]
+    );
+
+    const chatId = newChat.rows[0].id;
+
+    // Добавляем всех пользователей в чат
+    for (const memberId of users) {
+      await pool.query(
+        `INSERT INTO chat_users (chat_id, user_id) 
+         VALUES ($1, $2)`,
+        [chatId, memberId]
+      );
+    }
+
+    const formattedChat = {
+      id: chatId,
+      name: name,
+      avatar: avatar,
+      type: 'group',
+      users: users,
+      lastMessage: null,
+      messages: [],
+      usersDeleted: [],
+      createdBy: userId,
+    };
 
     return res.status(200).json({
       success: true,
-      chat: chat,
+      chat: formattedChat,
     });
+
   } catch (error) {
     return res.status(500).json({ success: false, message: "Server error" });
   }
@@ -856,45 +1350,119 @@ app.patch("/api/chats/group/edit/:id", async (req, res) => {
 
     const { id } = req.params;
     const { name, avatar } = req.body;
-    const db = await readDB();
-    const chatIndex = db.chats.findIndex(chat => chat.id === id);
+    // const db = await readDB();
+    // const chatIndex = db.chats.findIndex(chat => chat.id === id);
 
-    if (chatIndex === -1) {
+    // if (chatIndex === -1) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Chat not found",
+    //   });
+    // }
+
+    // const chat = db.chats[chatIndex];
+
+    // if (chat.type !== "group") {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Only group chats can be edited",
+    //   });
+    // }
+
+    // if (chat.createdBy !== userId) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Only chat creator can edit the group",
+    //   });
+    // }
+
+    // if (name !== undefined) {
+    //   db.chats[chatIndex].name = name;
+    // }
+
+    // if (avatar !== undefined) {
+    //   db.chats[chatIndex].avatar = avatar;
+    // }
+
+    // await writeDB(db);
+
+    // return res.status(200).json({
+    //   success: true,
+    //   chat: db.chats[chatIndex],
+    // });
+      console.log('Editing group chat:', { id, name, avatar, userId });
+
+    // Проверяем существование чата и права доступа
+    const chat = await pool.query(
+      `SELECT c.* 
+       FROM chats c
+       WHERE c.id = $1 AND c.type = 'group'`,
+      [id]
+    );
+
+    if (chat.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Chat not found",
+        message: "Group chat not found",
       });
     }
 
-    const chat = db.chats[chatIndex];
+    const chatData = chat.rows[0];
 
-    if (chat.type !== "group") {
-      return res.status(400).json({
-        success: false,
-        message: "Only group chats can be edited",
-      });
-    }
-
-    if (chat.createdBy !== userId) {
+    // Проверяем что пользователь - создатель группы
+    if (chatData.created_by !== userId) {
       return res.status(403).json({
         success: false,
         message: "Only chat creator can edit the group",
       });
     }
 
+    // Подготавливаем поля для обновления
+    const updateFields = [];
+    const updateValues = [];
+    let paramCount = 1;
+
     if (name !== undefined) {
-      db.chats[chatIndex].name = name;
+      updateFields.push(`name = $${paramCount}`);
+      updateValues.push(name);
+      paramCount++;
     }
 
     if (avatar !== undefined) {
-      db.chats[chatIndex].avatar = avatar;
+      updateFields.push(`avatar = $${paramCount}`);
+      updateValues.push(avatar);
+      paramCount++;
     }
 
-    await writeDB(db);
+    // Если нечего обновлять
+    if (updateFields.length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "No fields to update",
+      });
+    }
+
+    // Выполняем обновление
+    updateValues.push(id);
+    const updateQuery = `
+      UPDATE chats 
+      SET ${updateFields.join(', ')} 
+      WHERE id = $${paramCount}
+      RETURNING id, name, avatar, type, created_by, created_at
+    `;
+
+    const updatedChat = await pool.query(updateQuery, updateValues);
 
     return res.status(200).json({
       success: true,
-      chat: db.chats[chatIndex],
+      chat: {
+        id: updatedChat.rows[0].id,
+        name: updatedChat.rows[0].name,
+        avatar: updatedChat.rows[0].avatar,
+        type: updatedChat.rows[0].type,
+        createdBy: updatedChat.rows[0].created_by,
+      },
+      message: "Group chat updated successfully"
     });
   } catch (error) {
     return res.status(500).json({ 
@@ -922,68 +1490,146 @@ app.patch("/api/chats/group/addUser/:id", async (req, res) => {
     const { id } = req.params;
     const { user } = req.body;
     
-    const db = await readDB();
-    const chatIndex = db.chats.findIndex(chat => chat.id === id);
+    // const db = await readDB();
+    // const chatIndex = db.chats.findIndex(chat => chat.id === id);
 
-    if (chatIndex === -1) {
+    // if (chatIndex === -1) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "Chat not found",
+    //   });
+    // }
+
+    // const chat = db.chats[chatIndex];
+
+    // if (chat.type !== "group") {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "Only group chats can add users",
+    //   });
+    // }
+
+    // if (chat.createdBy !== userId) {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Only chat creator can add users to the group",
+    //   });
+    // }
+
+    // const userExists = db.users.some(u => u.id === user);
+    // if (!userExists) {
+    //   return res.status(404).json({
+    //     success: false,
+    //     message: "User not found",
+    //   });
+    // }
+    // if (chat.usersDeleted.includes(user)) {
+    //   chat.usersDeleted = chat.usersDeleted.filter(deletedUser => deletedUser !== user);
+
+    //   if (!chat.users.includes(user)) {
+    //     chat.users.push(user);
+    //   }
+      
+    //   await writeDB(db);
+      
+    //   return res.status(200).json({
+    //     success: true,
+    //     chat: db.chats[chatIndex],
+    //     message: "User restored to the group"
+    //   });
+    // }
+
+    // if (!chat.users.includes(user)) {
+    //   chat.users.push(user);
+    //   await writeDB(db);
+      
+    //   return res.status(200).json({
+    //     success: true,
+    //     chat: db.chats[chatIndex],
+    //     message: "User added successfully"
+    //   });
+    // } else {
+    //   return res.status(400).json({
+    //     success: false,
+    //     message: "User already in the group",
+    //   });
+    // }
+   console.log('Adding user to group:', { chatId: id, userId: user, adderId: userId });
+
+    // Проверяем существование чата и права доступа
+    const chat = await pool.query(
+      `SELECT c.* 
+       FROM chats c
+       WHERE c.id = $1 AND c.type = 'group'`,
+      [id]
+    );
+
+    if (chat.rows.length === 0) {
       return res.status(404).json({
         success: false,
-        message: "Chat not found",
+        message: "Group chat not found",
       });
     }
 
-    const chat = db.chats[chatIndex];
+    const chatData = chat.rows[0];
 
-    if (chat.type !== "group") {
-      return res.status(400).json({
-        success: false,
-        message: "Only group chats can add users",
-      });
-    }
-
-    if (chat.createdBy !== userId) {
+    // Проверяем что пользователь - создатель группы
+    if (chatData.created_by !== userId) {
       return res.status(403).json({
         success: false,
         message: "Only chat creator can add users to the group",
       });
     }
 
-    const userExists = db.users.some(u => u.id === user);
-    if (!userExists) {
+    // Проверяем существование добавляемого пользователя
+    const userExists = await pool.query(
+      'SELECT id FROM users WHERE id = $1',
+      [user]
+    );
+
+    if (userExists.rows.length === 0) {
       return res.status(404).json({
         success: false,
         message: "User not found",
       });
     }
-    if (chat.usersDeleted.includes(user)) {
-      chat.usersDeleted = chat.usersDeleted.filter(deletedUser => deletedUser !== user);
 
-      if (!chat.users.includes(user)) {
-        chat.users.push(user);
+    // Проверяем не добавлен ли уже пользователь в чат
+    const existingMember = await pool.query(
+      `SELECT is_deleted FROM chat_users WHERE chat_id = $1 AND user_id = $2`,
+      [id, user]
+    );
+
+    if (existingMember.rows.length > 0) {
+      const member = existingMember.rows[0];
+      
+      if (member.is_deleted) {
+        // Восстанавливаем пользователя (помечаем как не удаленного)
+        await pool.query(
+          `UPDATE chat_users SET is_deleted = false WHERE chat_id = $1 AND user_id = $2`,
+          [id, user]
+        );
+        
+        return res.status(200).json({
+          success: true,
+          message: "User restored to the group"
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: "User already in the group",
+        });
       }
-      
-      await writeDB(db);
-      
-      return res.status(200).json({
-        success: true,
-        chat: db.chats[chatIndex],
-        message: "User restored to the group"
-      });
-    }
-
-    if (!chat.users.includes(user)) {
-      chat.users.push(user);
-      await writeDB(db);
-      
-      return res.status(200).json({
-        success: true,
-        chat: db.chats[chatIndex],
-        message: "User added successfully"
-      });
     } else {
-      return res.status(400).json({
-        success: false,
-        message: "User already in the group",
+      // Добавляем нового пользователя в чат
+      await pool.query(
+        `INSERT INTO chat_users (chat_id, user_id) VALUES ($1, $2)`,
+        [id, user]
+      );
+      
+      return res.status(200).json({
+        success: true,
+        message: "User added successfully"
       });
     }
     
