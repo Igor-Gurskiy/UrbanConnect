@@ -215,7 +215,7 @@ app.post("/api/login", async (req, res) => {
     // const db = await readDB();
     // const existingUser = db.users.find((user) => user.email === email);
     const existingUser = await pool.query(`
-      select id, email, name, avatar
+      select *
       from users
       where email = $1
     `, [email]);
