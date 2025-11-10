@@ -355,7 +355,22 @@ app.get('/api/users', async (req, res) => {
 		const { search } = req.query;
 		// const db = await readDB();
 
-		if (!search) {
+    const queryParams = [decoded.id];
+    let whereClause = 'WHERE id != $1';
+
+    if (search) {
+      queryParams.push(`%${search}%`);
+      whereClause += ` AND (id::text ILIKE $2 OR name ILIKE $2 OR email ILIKE $2)`;
+    }
+
+    const users = await pool.query(
+      `SELECT id, email, name, avatar
+       FROM users
+       ${whereClause}
+       ORDER BY name`,
+      queryParams
+    );
+		// if (!search) {
 			// const users = db.users
 			//   .filter(user => user.id !== decoded.id)
 			//   .map((user) => ({
@@ -364,20 +379,6 @@ app.get('/api/users', async (req, res) => {
 			//     name: user.name,
 			//   }));
 
-			const users = await pool.query(
-				`
-        select id, email, name, avatar
-        from users
-        where id != $1
-      `,
-				[decoded.id]
-			);
-			return res.status(200).json({
-				success: true,
-				users: users.rows,
-			});
-		}
-
 		// const filteredUsers = db.users.filter(user =>
 		//   user.id !== decoded.id && (
 		//     user.id.includes(search) ||
@@ -385,14 +386,6 @@ app.get('/api/users', async (req, res) => {
 		//     user.email.includes(search)
 		//   )
 		// );
-		const users = await pool.query(
-			`
-      select id, email, name, avatar
-      from users
-      where id != $1 and (id like $2 or name like $2 or email like $2)
-    `,
-			[decoded.id, `%${search}%`]
-		);
 
 		// const users = filteredUsers.map((user) => ({
 		//   id: user.id,
