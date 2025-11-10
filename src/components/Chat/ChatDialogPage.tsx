@@ -23,7 +23,7 @@ export const ChatDialogPage: FC = () => {
 	const { headerHeight } = useOutletContext<{ headerHeight: string }>();
 	const openChat = useSelector(selectOpenChat);
 	const isLoading = useSelector(selectIsLoading);
-
+	console.log('openChat', openChat);
 	useEffect(() => {
 		if (id && !openChat) {
 			dispatch(getChatById(id));
