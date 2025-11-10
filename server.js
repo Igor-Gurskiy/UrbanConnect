@@ -532,13 +532,20 @@ app.patch('/api/user', async (req, res) => {
 			});
 		}
 
+    const currentUser = user.rows[0];
+    const updates = {};
+
 		if (req.body.name !== undefined) {
-			user.rows[0].name = req.body.name;
-		}
+			updates.name = req.body.name;
+    } else {
+      updates.name = currentUser.name;
+    }
 
 		if (req.body.avatar !== undefined) {
-			user.rows[0].avatar = req.body.avatar;
-		}
+			updates.avatar = req.body.avatar;
+    } else {
+      updates.avatar = currentUser.avatar;
+    }
 
 		// await writeDB(db);
 
@@ -548,17 +555,21 @@ app.patch('/api/user', async (req, res) => {
         SET name = $1, avatar = $2
         WHERE id = $3
       `,
-      [user.rows[0].name, user.rows[0].avatar, decoded.id]
+      [updates.name, updates.avatar, decoded.id]
     )
 
+    const updatedUser = await pool.query(
+      `SELECT * FROM users WHERE id = $1`,
+      [decoded.id]
+    );
 		return res.status(200).json({
 			success: true,
 			message: 'User updated successfully',
 			user: {
-				email: user.email,
-				name: user.name,
-				id: user.id,
-				avatar: user.avatar || '',
+				email: updatedUser.rows[0].email,
+        name: updatedUser.rows[0].name,
+        id: updatedUser.rows[0].id,
+        avatar: updatedUser.rows[0].avatar || '',
 			},
 		});
 	} catch (error) {
