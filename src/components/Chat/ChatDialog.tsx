@@ -1,10 +1,4 @@
-import {
-	memo,
-	useCallback,
-	useEffect,
-	useMemo,
-	type FC,
-} from 'react';
+import { memo, useCallback, useEffect, useMemo, type FC } from 'react';
 import { useSelector, useDispatch } from '../../services/store';
 import { selectUser } from '../../services/slices/Profile/Profile';
 import {
@@ -57,10 +51,34 @@ export const ChatDialog: FC<IChatDialog> = memo(
 					user: user.id,
 				};
 
+				// if (chat.messages.length === 0 && chat.type === 'private') {
+				// 	await dispatch(createChatPrivate(chat));
+				// 	await dispatch(createMessage({ chatId: chat.id, message }));
+				// 	id && dispatch(getChatById(id));
+				// }
 				if (chat.messages.length === 0 && chat.type === 'private') {
-					await dispatch(createChatPrivate(chat));
-					await dispatch(createMessage({ chatId: chat.id, message }));
-					id && dispatch(getChatById(id));
+					// 1. Создаем чат
+					const chatResult = await dispatch(createChatPrivate(chat));
+
+					if (chatResult.payload?.id) {
+						const newChatId = chatResult.payload.id;
+
+						// 2. Отправляем сообщение
+						await dispatch(
+							createMessage({
+								chatId: newChatId,
+								message,
+							})
+						);
+
+						// 3. Обновляем данные
+						dispatch(getChatById(newChatId));
+
+						// 4. Меняем URL если нужно
+						if (id !== newChatId) {
+							navigate(`/chat/${newChatId}`);
+						}
+					}
 				} else {
 					if (chat.usersDeleted.length > 0) {
 						console.log('chat.usersDeleted', chat.id);
