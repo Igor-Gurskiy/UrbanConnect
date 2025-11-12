@@ -24,20 +24,49 @@ const PORT = process.env.PORT || 3001;
 // const DB_PATH = path.join(__dirname, "db.json");
 
 const { Pool } = pkg;
+
+if (!process.env.DATABASE_URL) {
+	console.error('DATABASE_URL is not defined in .env file');
+} else {
+	console.log(
+		'DATABASE_URL found:',
+		process.env.DATABASE_URL.replace(/:[^:@]*@/, ':****@')
+	);
+}
+
 const pool = new Pool({
 	connectionString: process.env.DATABASE_URL,
 	ssl: {
 		rejectUnauthorized: false,
 	},
+	max: 6,
+	idleTimeoutMillis: 30000,
+	connectionTimeoutMillis: 5000,
+	maxUses: 7500,
 });
+
+async function testDatabaseConnection() {
+	if (!process.env.DATABASE_URL) {
+		console.log('DATABASE_URL not set, skipping database test');
+		return;
+	}
+
+	try {
+		const client = await pool.connect();
+		const result = await client.query('SELECT NOW()');
+		console.log('Database test query successful:', result.rows[0]);
+		client.release();
+	} catch (error) {
+		console.error('Database test query failed:', error.message);
+		console.log('Check your DATABASE_URL in .env file');
+	}
+}
+
+testDatabaseConnection();
 // Middleware
-// app.use(cors());
 app.use(
 	cors({
-		origin: [
-			'http://localhost:5173', // разработка
-			'https://urbanconnect.onrender.com', // продакшен
-		],
+		origin: ['http://localhost:5173', 'https://urbanconnect.onrender.com'],
 		credentials: true,
 	})
 );
@@ -50,32 +79,6 @@ const wss = new WebSocketServer({ server: httpServer });
 // Хранилище подключений по userId
 const connectedUsers = new Map();
 
-// Инициализация БД
-// async function initDB() {
-//   try {
-//     await fs.access(DB_PATH);
-//   } catch {
-//     await fs.writeFile(
-//       DB_PATH,
-//       JSON.stringify({ users: [], chats: [] }, null, 2)
-//     );
-//   }
-// }
-
-// Чтение/запись БД
-// async function readDB() {
-//   const data = await fs.readFile(DB_PATH, "utf8");
-//   return JSON.parse(data);
-// }
-
-// async function writeDB(data) {
-//   await fs.writeFile(DB_PATH, JSON.stringify(data, null, 2));
-// }
-
-// async function getUserChatsFromDB(userId) {
-//   const db = await readDB();
-//   return db.chats.filter((chat) => chat.users.includes(userId));
-// }
 async function getUserChatsFromDB(userId) {
 	const result = await pool.query(
 		`
@@ -89,36 +92,78 @@ async function getUserChatsFromDB(userId) {
 	return result.rows;
 }
 
+// async function getUserChatsFromDB(userId) {
+//   const client = await pool.connect();
+  
+//   try {
+//     const result = await client.query(
+//       `SELECT c.* FROM chats c 
+//        JOIN chat_users cu ON c.id = cu.chat_id 
+//        WHERE cu.user_id = $1 AND cu.is_deleted = false`,
+//       [userId]
+//     );
+//     return result.rows;
+//   } catch (error) {
+//     console.error('Error in getUserChatsFromDB:', error);
+//     throw error;
+//   } finally {
+//     client.release();
+//   }
+// }
+
 // WebSocket соединения
 wss.on('connection', async (ws, req) => {
 	console.log('WebSocket connection established');
-	const url = new URL(req.url, `http://${req.headers.host}`);
-	const userId = url.searchParams.get('userId');
-	// const chatId = url.searchParams.get("chatId");
-	ws.userId = userId;
-	const userChats = await getUserChatsFromDB(userId);
-	connectedUsers.set(userId, {
-		ws: ws,
-		userId: userId,
-		userChats: userChats.map((chat) => chat.id),
-	});
-	console.log(
-		`User ${userId} connected to chats:`,
-		userChats.map((chat) => chat.id)
-	);
-	// if (userId) {
-	//   connectedUsers.set(userId, ws);
-	//   console.log(`User ${userId} connected`);
-	// }
+	// const url = new URL(req.url, `http://${req.headers.host}`);
+	// const userId = url.searchParams.get('userId');
+	// ws.userId = userId;
+	// const userChats = await getUserChatsFromDB(userId);
+	// connectedUsers.set(userId, {
+	// 	ws: ws,
+	// 	userId: userId,
+	// 	userChats: userChats.map((chat) => chat.id),
+	// });
+	// console.log(
+	// 	`User ${userId} connected to chats:`,
+	// 	userChats.map((chat) => chat.id)
+	// );
+	try {
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const userId = url.searchParams.get('userId');
+    
+    if (!userId) {
+      console.log('No userId provided, closing connection');
+      ws.close(1008, 'User ID required');
+      return;
+    }
+    
+    ws.userId = userId;
+    
+    let userChats = [];
+    try {
+      userChats = await getUserChatsFromDB(userId);
+      console.log(`User ${userId} connected to chats:`, userChats.map((chat) => chat.id));
+    } catch (dbError) {
+      console.error(`Database error for user ${userId}:`, dbError.message);
+      userChats = [];
+    }
+    
+    connectedUsers.set(userId, {
+      ws: ws,
+      userId: userId,
+      userChats: userChats.map((chat) => chat.id),
+    });
 
-	// if (chatId) {
-	//   console.log(`Client connected to chat ${chatId}`);
-	// }
-
+  } catch (error) {
+    console.error('WebSocket connection setup error:', error);
+    ws.close(1011, 'Connection setup failed');
+    return;
+  }
 	ws.on('message', (data) => {
 		try {
 			const message = JSON.parse(data);
 			console.log(`Message received from client: ${message}`);
+			handleWebSocketMessage(ws, message);
 		} catch (error) {
 			console.log(`Error parsing message: ${error}`);
 		}
@@ -136,18 +181,40 @@ wss.on('connection', async (ws, req) => {
 	});
 });
 
-// Функция для broadcast сообщения всем в чате
-// async function broadcastMessage(message, chatId) {
-//   const db = await readDB();
-//   const chat = db.chats.find(chat => chat.id === chatId);
-//   if (!chat) return;
-//    chat.users.forEach(userId => {
-//     const userConnection = connectedUsers.get(userId);
-//     if (userConnection && userConnection.ws.readyState === WebSocket.OPEN) {
-//       userConnection.ws.send(JSON.stringify(message));
-//     }
-//   });
-// }
+function handleWebSocketMessage(ws, message) {
+  switch (message.type) {
+    case 'ping':
+      ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+      break;
+    case 'chat_message':
+      handleChatMessage(ws, message);
+      break;
+    default:
+      console.log('Unknown message type:', message.type);
+  }
+}
+
+async function handleChatMessage(ws, message) {
+  try {
+    const { chatId, content } = message;
+    
+    const savedMessage = await saveMessageToDB(chatId, ws.userId, content);
+    
+    await broadcastMessage({
+      type: 'new_message',
+      message: savedMessage,
+      chatId: chatId
+    }, chatId);
+    
+  } catch (error) {
+    console.error('Error handling chat message:', error);
+    ws.send(JSON.stringify({
+      type: 'error',
+      message: 'Failed to send message'
+    }));
+  }
+}
+
 async function broadcastMessage(message, chatId) {
 	const usersResult = await pool.query(
 		`
@@ -171,8 +238,6 @@ app.post('/api/register', async (req, res) => {
 	try {
 		const { email, name, password } = req.body;
 
-		// const db = await readDB();
-		// const existingUser = db.users.find((user) => user.email === email);
 		const existingUser = await pool.query(
 			`
       select *
@@ -190,13 +255,6 @@ app.post('/api/register', async (req, res) => {
 			});
 		}
 
-		// const newUser = {
-		//   id: uuidv4(),
-		//   email,
-		//   name,
-		//   password,
-		//   createdAt: new Date().toISOString(),
-		// };
 		const newUser = await pool.query(
 			`
       insert into users (email, name, password)
@@ -205,9 +263,6 @@ app.post('/api/register', async (req, res) => {
     `,
 			[email, name, password]
 		);
-
-		// db.users.push(newUser);
-		// await writeDB(db);
 
 		const { accessToken, refreshToken } = generateTokens(newUser.rows[0].id);
 
@@ -232,8 +287,6 @@ app.post('/api/login', async (req, res) => {
 	try {
 		const { email, password, remember = false } = req.body;
 
-		// const db = await readDB();
-		// const existingUser = db.users.find((user) => user.email === email);
 		const existingUser = await pool.query(
 			`
       select *
@@ -297,8 +350,6 @@ app.get('/api/user', async (req, res) => {
 		const token = authHeader.split(' ')[1];
 		const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-		// const db = await readDB();
-		// const user = db.users.find((user) => user.id === decoded.id);
 		const user = await pool.query(
 			`
       select *
@@ -353,46 +404,22 @@ app.get('/api/users', async (req, res) => {
 		const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
 		const { search } = req.query;
-		// const db = await readDB();
 
-    const queryParams = [decoded.id];
-    let whereClause = 'WHERE id != $1';
+		const queryParams = [decoded.id];
+		let whereClause = 'WHERE id != $1';
 
-    if (search) {
-      queryParams.push(`%${search}%`);
-      whereClause += ` AND (id::text ILIKE $2 OR name ILIKE $2 OR email ILIKE $2)`;
-    }
+		if (search) {
+			queryParams.push(`%${search}%`);
+			whereClause += ` AND (id::text ILIKE $2 OR name ILIKE $2 OR email ILIKE $2)`;
+		}
 
-    const users = await pool.query(
-      `SELECT id, email, name, avatar
+		const users = await pool.query(
+			`SELECT id, email, name, avatar
        FROM users
        ${whereClause}
        ORDER BY name`,
-      queryParams
-    );
-		// if (!search) {
-			// const users = db.users
-			//   .filter(user => user.id !== decoded.id)
-			//   .map((user) => ({
-			//     id: user.id,
-			//     email: user.email,
-			//     name: user.name,
-			//   }));
-
-		// const filteredUsers = db.users.filter(user =>
-		//   user.id !== decoded.id && (
-		//     user.id.includes(search) ||
-		//     user.name.includes(search) ||
-		//     user.email.includes(search)
-		//   )
-		// );
-
-		// const users = filteredUsers.map((user) => ({
-		//   id: user.id,
-		//   email: user.email,
-		//   name: user.name,
-		// }));
-
+			queryParams
+		);
 		return res.status(200).json({
 			success: true,
 			users: users.rows,
@@ -448,8 +475,6 @@ app.post('/api/token', async (req, res) => {
 		}
 
 		const decoded = jwt.verify(refreshToken, REFRESH_TOKEN_SECRET);
-		// const db = await readDB();
-		// const user = db.users.find((user) => user.id === decoded.id);
 		const user = await pool.query(
 			`
       select *
@@ -507,8 +532,6 @@ app.patch('/api/user', async (req, res) => {
 		const token = authHeader.split(' ')[1];
 		const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-		// const db = await readDB();
-		// const user = db.users.find((user) => user.id === decoded.id);
 		const user = await pool.query(
 			`
       select *
@@ -525,44 +548,41 @@ app.patch('/api/user', async (req, res) => {
 			});
 		}
 
-    const currentUser = user.rows[0];
-    const updates = {};
+		const currentUser = user.rows[0];
+		const updates = {};
 
 		if (req.body.name !== undefined) {
 			updates.name = req.body.name;
-    } else {
-      updates.name = currentUser.name;
-    }
+		} else {
+			updates.name = currentUser.name;
+		}
 
 		if (req.body.avatar !== undefined) {
 			updates.avatar = req.body.avatar;
-    } else {
-      updates.avatar = currentUser.avatar;
-    }
+		} else {
+			updates.avatar = currentUser.avatar;
+		}
 
-		// await writeDB(db);
-
-    await pool.query(
-      `
+		await pool.query(
+			`
         UPDATE users 
         SET name = $1, avatar = $2
         WHERE id = $3
       `,
-      [updates.name, updates.avatar, decoded.id]
-    )
+			[updates.name, updates.avatar, decoded.id]
+		);
 
-    const updatedUser = await pool.query(
-      `SELECT * FROM users WHERE id = $1`,
-      [decoded.id]
-    );
+		const updatedUser = await pool.query(`SELECT * FROM users WHERE id = $1`, [
+			decoded.id,
+		]);
 		return res.status(200).json({
 			success: true,
 			message: 'User updated successfully',
 			user: {
 				email: updatedUser.rows[0].email,
-        name: updatedUser.rows[0].name,
-        id: updatedUser.rows[0].id,
-        avatar: updatedUser.rows[0].avatar || '',
+				name: updatedUser.rows[0].name,
+				id: updatedUser.rows[0].id,
+				avatar: updatedUser.rows[0].avatar || '',
 			},
 		});
 	} catch (error) {
@@ -584,8 +604,6 @@ app.patch('/api/user/password', async (req, res) => {
 		const token = authHeader.split(' ')[1];
 		const decoded = jwt.verify(token, ACCESS_TOKEN_SECRET);
 
-		// const db = await readDB();
-		// const user = db.users.find((user) => user.id === decoded.id);
 		const user = await pool.query(
 			`
       select *
@@ -617,9 +635,6 @@ app.patch('/api/user/password', async (req, res) => {
 				message: 'Старый пароль неверен',
 			});
 		}
-
-		// user.rows[0].password = newPassword;
-		// await writeDB(db);
 		await pool.query(
 			`
       UPDATE users 
