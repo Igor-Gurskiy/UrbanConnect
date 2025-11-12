@@ -52,17 +52,17 @@ export const ChatDialog: FC<IChatDialog> = memo(
 				};
 
 				if (chat.messages.length === 0 && chat.type === 'private') {
-					// await dispatch(createChatPrivate(chat));
-					const result = await dispatch(createChatPrivate(chat));
+					await dispatch(createChatPrivate(chat));
+					// const result = await dispatch(createChatPrivate(chat));
 
-					// Проверяем успешное создание чата
-					if (createChatPrivate.fulfilled.match(result)) {
-						// Теперь отправляем сообщение
-						await dispatch(createMessage({ chatId: chat.id, message }));
-						id && dispatch(getChatById(id));
-					} else {
-						console.error('Failed to create chat:', result.error);
-					}
+					// // Проверяем успешное создание чата
+					// if (createChatPrivate.fulfilled.match(result)) {
+					// 	// Теперь отправляем сообщение
+					// 	await dispatch(createMessage({ chatId: chat.id, message }));
+					// 	id && dispatch(getChatById(id));
+					// } else {
+					// 	console.error('Failed to create chat:', result.error);
+					// }
 					await dispatch(createMessage({ chatId: chat.id, message }));
 					id && dispatch(getChatById(id));
 				} else {
