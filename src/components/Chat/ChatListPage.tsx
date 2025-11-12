@@ -64,6 +64,7 @@ export const ChatListPage: FC = () => {
 					messages: [],
 					lastMessage: null,
 					usersDeleted: [],
+					createdBy: userAuth.id,
 				};
 				dispatch(setOpenChat(newChat));
 				navigate(`/chat/${newChat.id}`, { state: { newChat } });

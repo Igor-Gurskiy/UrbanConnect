@@ -1215,12 +1215,12 @@ app.post('/api/chat/private', async (req, res) => {
 		//   chat: chat,
 		// });
 
-		const { users, name, avatar } = req.body;
+		const chat = req.body;
 
-		console.log('Creating private chat:', { users, name });
+		console.log('Creating private chat:', chat.users, chat.name );
 
 		// Проверяем что передано 2 пользователя для приватного чата
-		if (!users || users.length !== 2) {
+		if (!chat.users || chat.users.length !== 2) {
 			return res.status(400).json({
 				success: false,
 				message: 'Private chat must have exactly 2 users',
@@ -1230,7 +1230,7 @@ app.post('/api/chat/private', async (req, res) => {
 		// Проверяем существование пользователей
 		const usersCheck = await pool.query(
 			'SELECT id FROM users WHERE id = ANY($1)',
-			[users]
+			[chat.users]
 		);
 
 		if (usersCheck.rows.length !== 2) {
@@ -1251,7 +1251,7 @@ app.post('/api/chat/private', async (req, res) => {
          AND cu2.user_id = $2
          AND cu1.is_deleted = false 
          AND cu2.is_deleted = false`,
-			[users[0], users[1]]
+			[chat.users[0], chat.users[1]]
 		);
 
 		if (existingChat.rows.length > 0) {
@@ -1262,18 +1262,30 @@ app.post('/api/chat/private', async (req, res) => {
 			});
 		}
 
-		// Создаем чат
+		// Получаем информацию о другом пользователе для имени чата
+		const otherUser = await pool.query(
+			`SELECT u.name, u.avatar 
+       FROM users u 
+       WHERE u.id != $1 AND u.id = ANY($2) 
+       LIMIT 1`,
+			[chat.createdBy || chat.users[0], chat.users]
+		);
+
+		const chatName = otherUser.rows.length > 0 ? otherUser.rows[0].name : chat.name;
+		const chatAvatar = otherUser.rows.length > 0 ? otherUser.rows[0].avatar : chat.avatar;
+
+		// Создаем чат с переданным ID
 		const newChat = await pool.query(
-			`INSERT INTO chats (name, avatar, type) 
-       VALUES ($1, $2, $3) 
-       RETURNING id, name, avatar, type, created_at`,
-			[name, avatar, 'private']
+			`INSERT INTO chats (id, name, avatar, type, created_by) 
+       VALUES ($1, $2, $3, $4, $5) 
+       RETURNING id, name, avatar, type, created_by, created_at`,
+			[chat.id, chatName, chatAvatar, 'private', chat.createdBy || chat.users[0]]
 		);
 
 		const chatId = newChat.rows[0].id;
 
 		// Добавляем пользователей в чат
-		for (const userId of users) {
+		for (const userId of chat.users) {
 			await pool.query(
 				`INSERT INTO chat_users (chat_id, user_id) 
          VALUES ($1, $2)`,
@@ -1281,27 +1293,17 @@ app.post('/api/chat/private', async (req, res) => {
 			);
 		}
 
-		// Получаем информацию о другом пользователе для имени чата
-		const otherUser = await pool.query(
-			`SELECT u.name, u.avatar 
-       FROM users u 
-       WHERE u.id != $1 AND u.id = ANY($2) 
-       LIMIT 1`,
-			[users[0], users]
-		);
-
-		const chatName = otherUser.rows.length > 0 ? otherUser.rows[0].name : name;
-
 		const formattedChat = {
 			id: chatId,
 			name: chatName,
-			avatar: avatar,
+			avatar: chatAvatar,
 			type: 'private',
-			users: users,
+			users: chat.users,
 			lastMessage: null,
 			messages: [],
 			usersDeleted: [],
-			createdBy: users[0], // Первый пользователь как создатель
+			createdBy: chat.createdBy || chat.users[0],
+			createdAt: newChat.rows[0].created_at,
 		};
 
 		return res.status(200).json({
