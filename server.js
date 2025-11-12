@@ -110,56 +110,56 @@ async function getUserChatsFromDB(userId) {
 // WebSocket соединения
 wss.on('connection', async (ws, req) => {
 	console.log('WebSocket connection established');
-	// const url = new URL(req.url, `http://${req.headers.host}`);
-	// const userId = url.searchParams.get('userId');
-	// ws.userId = userId;
-	// const userChats = await getUserChatsFromDB(userId);
-	// connectedUsers.set(userId, {
-	// 	ws: ws,
-	// 	userId: userId,
-	// 	userChats: userChats.map((chat) => chat.id),
-	// });
-	// console.log(
-	// 	`User ${userId} connected to chats:`,
-	// 	userChats.map((chat) => chat.id)
-	// );
-	try {
-    const url = new URL(req.url, `http://${req.headers.host}`);
-    const userId = url.searchParams.get('userId');
+	const url = new URL(req.url, `http://${req.headers.host}`);
+	const userId = url.searchParams.get('userId');
+	ws.userId = userId;
+	const userChats = await getUserChatsFromDB(userId);
+	connectedUsers.set(userId, {
+		ws: ws,
+		userId: userId,
+		userChats: userChats.map((chat) => chat.id),
+	});
+	console.log(
+		`User ${userId} connected to chats:`,
+		userChats.map((chat) => chat.id)
+	);
+// 	try {
+//     const url = new URL(req.url, `http://${req.headers.host}`);
+//     const userId = url.searchParams.get('userId');
     
-    if (!userId) {
-      console.log('No userId provided, closing connection');
-      ws.close(1008, 'User ID required');
-      return;
-    }
+//     if (!userId) {
+//       console.log('No userId provided, closing connection');
+//       ws.close(1008, 'User ID required');
+//       return;
+//     }
     
-    ws.userId = userId;
+//     ws.userId = userId;
     
-    let userChats = [];
-    try {
-      userChats = await getUserChatsFromDB(userId);
-      console.log(`User ${userId} connected to chats:`, userChats.map((chat) => chat.id));
-    } catch (dbError) {
-      console.error(`Database error for user ${userId}:`, dbError.message);
-      userChats = [];
-    }
+//     let userChats = [];
+//     try {
+//       userChats = await getUserChatsFromDB(userId);
+//       console.log(`User ${userId} connected to chats:`, userChats.map((chat) => chat.id));
+//     } catch (dbError) {
+//       console.error(`Database error for user ${userId}:`, dbError.message);
+//       userChats = [];
+//     }
     
-    connectedUsers.set(userId, {
-      ws: ws,
-      userId: userId,
-      userChats: userChats.map((chat) => chat.id),
-    });
+//     connectedUsers.set(userId, {
+//       ws: ws,
+//       userId: userId,
+//       userChats: userChats.map((chat) => chat.id),
+//     });
 
-  } catch (error) {
-    console.error('WebSocket connection setup error:', error);
-    ws.close(1011, 'Connection setup failed');
-    return;
-  }
+//   } catch (error) {
+//     console.error('WebSocket connection setup error:', error);
+//     ws.close(1011, 'Connection setup failed');
+//     return;
+//   }
 	ws.on('message', (data) => {
 		try {
 			const message = JSON.parse(data);
 			console.log(`Message received from client: ${message}`);
-			handleWebSocketMessage(ws, message);
+			// handleWebSocketMessage(ws, message);
 		} catch (error) {
 			console.log(`Error parsing message: ${error}`);
 		}
@@ -177,39 +177,39 @@ wss.on('connection', async (ws, req) => {
 	});
 });
 
-function handleWebSocketMessage(ws, message) {
-  switch (message.type) {
-    case 'ping':
-      ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
-      break;
-    case 'chat_message':
-      handleChatMessage(ws, message);
-      break;
-    default:
-      console.log('Unknown message type:', message.type);
-  }
-}
+// function handleWebSocketMessage(ws, message) {
+//   switch (message.type) {
+//     case 'ping':
+//       ws.send(JSON.stringify({ type: 'pong', timestamp: new Date().toISOString() }));
+//       break;
+//     case 'chat_message':
+//       handleChatMessage(ws, message);
+//       break;
+//     default:
+//       console.log('Unknown message type:', message.type);
+//   }
+// }
 
-async function handleChatMessage(ws, message) {
-  try {
-    const { chatId, content } = message;
+// async function handleChatMessage(ws, message) {
+//   try {
+//     const { chatId, content } = message;
     
-    const savedMessage = await saveMessageToDB(chatId, ws.userId, content);
+//     const savedMessage = await saveMessageToDB(chatId, ws.userId, content);
     
-    await broadcastMessage({
-      type: 'new_message',
-      message: savedMessage,
-      chatId: chatId
-    }, chatId);
+//     await broadcastMessage({
+//       type: 'new_message',
+//       message: savedMessage,
+//       chatId: chatId
+//     }, chatId);
     
-  } catch (error) {
-    console.error('Error handling chat message:', error);
-    ws.send(JSON.stringify({
-      type: 'error',
-      message: 'Failed to send message'
-    }));
-  }
-}
+//   } catch (error) {
+//     console.error('Error handling chat message:', error);
+//     ws.send(JSON.stringify({
+//       type: 'error',
+//       message: 'Failed to send message'
+//     }));
+//   }
+// }
 
 async function broadcastMessage(message, chatId) {
 	const usersResult = await pool.query(
