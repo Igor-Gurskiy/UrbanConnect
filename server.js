@@ -924,49 +924,142 @@ app.get('/api/chat/:id', async (req, res) => {
 });
 
 // Отправка сообщения в существующем чате
+// app.post('/api/message', async (req, res) => {
+// 	try {
+// 		const { message, chatId } = req.body;
+// 		// const db = await readDB();
+// 		// const chat = db.chats.find((chat) => chat.id === chatId);
+// 		const chatAccess = await pool.query(
+// 			`SELECT c.id FROM chats c
+//        JOIN chat_users cu ON c.id = cu.chat_id
+//        WHERE c.id = $1 AND cu.user_id = $2 AND cu.is_deleted = false`,
+// 			[chatId, message.user]
+// 		);
+// 		// if (!chat) {
+// 		//   return res.status(404).json({
+// 		//     success: false,
+// 		//     message: "Chat not found",
+// 		//   });
+// 		// }
+// 		if (chatAccess.rows.length === 0) {
+// 			return res.status(404).json({
+// 				success: false,
+// 				message: 'Chat not found or access denied',
+// 			});
+// 		}
+
+// 		// const serverMessage = {
+// 		//   ...message,
+// 		//   id: uuidv4(),
+// 		//   createdAt: new Date().toISOString(),
+// 		// };
+// 		// chat.messages.push(serverMessage);
+// 		// chat.lastMessage = serverMessage;
+// 		// await writeDB(db);
+// 		const serverMessage = await pool.query(
+// 			`INSERT INTO messages (id, chat_id, user_id, text, created_at)
+//        VALUES ($1, $2, $3, $4, $5)
+//        RETURNING id, chat_id, user_id, text, created_at`,
+// 			[uuidv4(), chatId, message.user, message.text, new Date().toISOString()]
+// 		);
+
+// 		await pool.query(`UPDATE chats SET last_message_id = $1 WHERE id = $2`, [
+// 			serverMessage.rows[0].id,
+// 			chatId,
+// 		]);
+
+// 		const formattedMessage = {
+// 			id: serverMessage.rows[0].id,
+// 			text: serverMessage.rows[0].text,
+// 			createdAt: serverMessage.rows[0].created_at,
+// 			user: serverMessage.rows[0].user_id,
+// 		};
+
+// 		// // Отправляем сообщение через WebSocket
+// 		// const messageToSend = {
+// 		//   type: "message",
+// 		//   chatId,
+// 		//   message: serverMessage,
+// 		// };
+
+// 		const messageToSend = {
+// 			type: 'message',
+// 			chatId,
+// 			message: formattedMessage,
+// 		};
+
+// 		broadcastMessage(messageToSend, chatId);
+
+// 		// return res.status(200).json({
+// 		//   success: true,
+// 		//   message: serverMessage,
+// 		// });
+// 		return res.status(200).json({
+// 			success: true,
+// 			message: formattedMessage,
+// 		});
+// 	} catch (error) {
+// 		return res.status(500).json({ success: false, message: 'Server error' });
+// 	}
+// });
 app.post('/api/message', async (req, res) => {
 	try {
 		const { message, chatId } = req.body;
-		// const db = await readDB();
-		// const chat = db.chats.find((chat) => chat.id === chatId);
+		
+		console.log('=== MESSAGE CREATION START ===');
+		console.log('Received request body:', { message, chatId });
+		console.log('Message object:', message);
+		console.log('Chat ID:', chatId);
+
+		// Проверяем существование чата и доступ пользователя
 		const chatAccess = await pool.query(
 			`SELECT c.id FROM chats c
        JOIN chat_users cu ON c.id = cu.chat_id
        WHERE c.id = $1 AND cu.user_id = $2 AND cu.is_deleted = false`,
 			[chatId, message.user]
 		);
-		// if (!chat) {
-		//   return res.status(404).json({
-		//     success: false,
-		//     message: "Chat not found",
-		//   });
-		// }
+		
+		console.log('Chat access query result:', chatAccess.rows);
+		console.log('Chat access row count:', chatAccess.rows.length);
+
 		if (chatAccess.rows.length === 0) {
+			console.log('Chat access denied - no rows found');
 			return res.status(404).json({
 				success: false,
 				message: 'Chat not found or access denied',
 			});
 		}
 
-		// const serverMessage = {
-		//   ...message,
-		//   id: uuidv4(),
-		//   createdAt: new Date().toISOString(),
-		// };
-		// chat.messages.push(serverMessage);
-		// chat.lastMessage = serverMessage;
-		// await writeDB(db);
+		console.log('Chat access granted, creating message...');
+
+		// Создаем сообщение
+		const messageId = uuidv4();
+		const createdAt = new Date().toISOString();
+		
+		console.log('Message data for insert:', {
+			id: messageId,
+			chat_id: chatId,
+			user_id: message.user,
+			text: message.text,
+			created_at: createdAt
+		});
+
 		const serverMessage = await pool.query(
 			`INSERT INTO messages (id, chat_id, user_id, text, created_at)
        VALUES ($1, $2, $3, $4, $5)
        RETURNING id, chat_id, user_id, text, created_at`,
-			[uuidv4(), chatId, message.user, message.text, new Date().toISOString()]
+			[messageId, chatId, message.user, message.text, createdAt]
 		);
 
+		console.log('Message created successfully:', serverMessage.rows[0]);
+
+		// Обновляем last_message_id в чате
 		await pool.query(`UPDATE chats SET last_message_id = $1 WHERE id = $2`, [
 			serverMessage.rows[0].id,
 			chatId,
 		]);
+
+		console.log('Last message updated in chat');
 
 		const formattedMessage = {
 			id: serverMessage.rows[0].id,
@@ -975,31 +1068,30 @@ app.post('/api/message', async (req, res) => {
 			user: serverMessage.rows[0].user_id,
 		};
 
-		// // Отправляем сообщение через WebSocket
-		// const messageToSend = {
-		//   type: "message",
-		//   chatId,
-		//   message: serverMessage,
-		// };
-
 		const messageToSend = {
 			type: 'message',
 			chatId,
 			message: formattedMessage,
 		};
 
+		console.log('Broadcasting message...');
 		broadcastMessage(messageToSend, chatId);
 
-		// return res.status(200).json({
-		//   success: true,
-		//   message: serverMessage,
-		// });
+		console.log('=== MESSAGE CREATION SUCCESS ===');
 		return res.status(200).json({
 			success: true,
 			message: formattedMessage,
 		});
 	} catch (error) {
-		return res.status(500).json({ success: false, message: 'Server error' });
+		console.error('=== MESSAGE CREATION ERROR ===');
+		console.error('Error details:', error);
+		console.error('Error message:', error.message);
+		console.error('Error stack:', error.stack);
+		return res.status(500).json({ 
+			success: false, 
+			message: 'Server error',
+			error: error.message 
+		});
 	}
 });
 
