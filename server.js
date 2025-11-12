@@ -39,10 +39,6 @@ const pool = new Pool({
 	ssl: {
 		rejectUnauthorized: false,
 	},
-	max: 6,
-	idleTimeoutMillis: 30000,
-	connectionTimeoutMillis: 5000,
-	maxUses: 7500,
 });
 
 async function testDatabaseConnection() {
