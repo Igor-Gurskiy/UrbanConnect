@@ -90,11 +90,11 @@ async function getUserChatsFromDB(userId) {
 
 // async function getUserChatsFromDB(userId) {
 //   const client = await pool.connect();
-  
+
 //   try {
 //     const result = await client.query(
-//       `SELECT c.* FROM chats c 
-//        JOIN chat_users cu ON c.id = cu.chat_id 
+//       `SELECT c.* FROM chats c
+//        JOIN chat_users cu ON c.id = cu.chat_id
 //        WHERE cu.user_id = $1 AND cu.is_deleted = false`,
 //       [userId]
 //     );
@@ -123,38 +123,38 @@ wss.on('connection', async (ws, req) => {
 		`User ${userId} connected to chats:`,
 		userChats.map((chat) => chat.id)
 	);
-// 	try {
-//     const url = new URL(req.url, `http://${req.headers.host}`);
-//     const userId = url.searchParams.get('userId');
-    
-//     if (!userId) {
-//       console.log('No userId provided, closing connection');
-//       ws.close(1008, 'User ID required');
-//       return;
-//     }
-    
-//     ws.userId = userId;
-    
-//     let userChats = [];
-//     try {
-//       userChats = await getUserChatsFromDB(userId);
-//       console.log(`User ${userId} connected to chats:`, userChats.map((chat) => chat.id));
-//     } catch (dbError) {
-//       console.error(`Database error for user ${userId}:`, dbError.message);
-//       userChats = [];
-//     }
-    
-//     connectedUsers.set(userId, {
-//       ws: ws,
-//       userId: userId,
-//       userChats: userChats.map((chat) => chat.id),
-//     });
+	// 	try {
+	//     const url = new URL(req.url, `http://${req.headers.host}`);
+	//     const userId = url.searchParams.get('userId');
 
-//   } catch (error) {
-//     console.error('WebSocket connection setup error:', error);
-//     ws.close(1011, 'Connection setup failed');
-//     return;
-//   }
+	//     if (!userId) {
+	//       console.log('No userId provided, closing connection');
+	//       ws.close(1008, 'User ID required');
+	//       return;
+	//     }
+
+	//     ws.userId = userId;
+
+	//     let userChats = [];
+	//     try {
+	//       userChats = await getUserChatsFromDB(userId);
+	//       console.log(`User ${userId} connected to chats:`, userChats.map((chat) => chat.id));
+	//     } catch (dbError) {
+	//       console.error(`Database error for user ${userId}:`, dbError.message);
+	//       userChats = [];
+	//     }
+
+	//     connectedUsers.set(userId, {
+	//       ws: ws,
+	//       userId: userId,
+	//       userChats: userChats.map((chat) => chat.id),
+	//     });
+
+	//   } catch (error) {
+	//     console.error('WebSocket connection setup error:', error);
+	//     ws.close(1011, 'Connection setup failed');
+	//     return;
+	//   }
 	ws.on('message', (data) => {
 		try {
 			const message = JSON.parse(data);
@@ -193,15 +193,15 @@ wss.on('connection', async (ws, req) => {
 // async function handleChatMessage(ws, message) {
 //   try {
 //     const { chatId, content } = message;
-    
+
 //     const savedMessage = await saveMessageToDB(chatId, ws.userId, content);
-    
+
 //     await broadcastMessage({
 //       type: 'new_message',
 //       message: savedMessage,
 //       chatId: chatId
 //     }, chatId);
-    
+
 //   } catch (error) {
 //     console.error('Error handling chat message:', error);
 //     ws.send(JSON.stringify({
@@ -1217,7 +1217,7 @@ app.post('/api/chat/private', async (req, res) => {
 
 		const chat = req.body;
 
-		console.log('Creating private chat:', chat.users, chat.name );
+		console.log('Creating private chat:', chat.users, chat.name);
 
 		// Проверяем что передано 2 пользователя для приватного чата
 		if (!chat.users || chat.users.length !== 2) {
@@ -1271,15 +1271,23 @@ app.post('/api/chat/private', async (req, res) => {
 			[chat.createdBy || chat.users[0], chat.users]
 		);
 
-		const chatName = otherUser.rows.length > 0 ? otherUser.rows[0].name : chat.name;
-		const chatAvatar = otherUser.rows.length > 0 ? otherUser.rows[0].avatar : chat.avatar;
+		const chatName =
+			otherUser.rows.length > 0 ? otherUser.rows[0].name : chat.name;
+		const chatAvatar =
+			otherUser.rows.length > 0 ? otherUser.rows[0].avatar : chat.avatar;
 
 		// Создаем чат с переданным ID
 		const newChat = await pool.query(
 			`INSERT INTO chats (id, name, avatar, type, created_by) 
        VALUES ($1, $2, $3, $4, $5) 
        RETURNING id, name, avatar, type, created_by, created_at`,
-			[chat.id, chatName, chatAvatar, 'private', chat.createdBy || chat.users[0]]
+			[
+				chat.id,
+				chatName,
+				chatAvatar,
+				'private',
+				chat.createdBy || chat.users[0],
+			]
 		);
 
 		const chatId = newChat.rows[0].id;
